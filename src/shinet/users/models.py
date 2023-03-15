@@ -13,7 +13,7 @@ class Users(models.Model):
     settings = models.OneToOneField('UserSettings', on_delete=models.PROTECT, null=True)
     master_info = models.OneToOneField('MasterInfo', on_delete=models.PROTECT, null=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f'{self.first_name} {self.last_name}'
 
     class Meta:
@@ -37,4 +37,35 @@ class UserSettings(models.Model):
     class Meta:
         verbose_name = 'Настройки пользователя'
         verbose_name_plural = 'Настройки пользователей'
+
+
+class UsersImages(models.Model):
+    user = models.ForeignKey(Users, verbose_name='Пользователь', on_delete=models.CASCADE)
+    image = models.ImageField(verbose_name='Изображение')
+
+    class Meta:
+        verbose_name = 'Изображение пользователя'
+        verbose_name_plural = 'Изображения пользователей'
+
+
+class UsersPhonesNumbers(models.Model):
+    user = models.ForeignKey(Users, verbose_name='Пользователь', on_delete=models.CASCADE)
+    phone_number = models.CharField(verbose_name='Номер телефона', max_length=255)
+
+    class Meta:
+        verbose_name = 'Номер телефона пользователя'
+        verbose_name_plural = 'Номера телефонов пользователей'
+
+
+class UnregisteredClients(models.Model):
+    master = models.ForeignKey(MasterInfo, verbose_name='Мастер', on_delete=models.CASCADE)
+    first_name = models.CharField(verbose_name='Имя', max_length=255)
+    last_name = models.CharField(verbose_name='Фамилия', max_length=255)
+
+    def __str__(self) -> str:
+        return f'{self.first_name} {self.last_name}'
+
+    class Meta:
+        verbose_name = 'Незарегистрированный клиент'
+        verbose_name_plural = 'Незарегистрированные клиенты'
 
