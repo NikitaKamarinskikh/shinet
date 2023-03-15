@@ -44,6 +44,7 @@ INSTALLED_APPS = [
 
     'users.apps.UsersConfig',
     'services.apps.ServicesConfig',
+    'tokens.apps.TokensConfig',
 ]
 
 MIDDLEWARE = [
