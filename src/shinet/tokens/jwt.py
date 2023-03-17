@@ -70,6 +70,7 @@ class JWT:
 
     def _create_access_token(self) -> str:
         encoded_header, encoded_payload = self._encode_header_and_payload()
+        self._payload['exp'] = get_token_expiration_time_in_utc(ACCESS_TOKEN_DEFAULT_LIFETIME_IN_SECONDS)
         return f'{encoded_header}.' \
                f'{encoded_payload}.' \
                f'{self._signature}'
