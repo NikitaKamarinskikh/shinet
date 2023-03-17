@@ -6,8 +6,8 @@ from rest_framework.generics import GenericAPIView
 
 from tokens.jwt import JWT
 from tokens.services import create_refresh_token
-from .masters_serializers import MasterCreationSerializer
-from .settings import UsersRoles
+from .serializers import MasterCreationSerializer
+from users.settings import UsersRoles
 
 
 class MastersRegistrationAPIView(GenericAPIView):

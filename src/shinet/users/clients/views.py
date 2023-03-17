@@ -3,8 +3,8 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
-from .clients_serializers import ClientCreationSerializer
-from .settings import UsersRoles
+from .serializers import ClientCreationSerializer
+from users.settings import UsersRoles
 from tokens.services import create_refresh_token
 from tokens.jwt import JWT
 

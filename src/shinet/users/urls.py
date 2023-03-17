@@ -1,6 +1,6 @@
 from django.urls import path
-from .clients_views import ClientsRegistrationAPIView
-from .masters_views import MastersRegistrationAPIView
+from .clients.views import ClientsRegistrationAPIView
+from .masters.views import MastersRegistrationAPIView
 
 urlpatterns = [
     path('masters/registration/', MastersRegistrationAPIView.as_view()),
