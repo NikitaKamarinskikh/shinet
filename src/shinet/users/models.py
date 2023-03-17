@@ -7,23 +7,24 @@ class Users(models.Model):
     role = models.CharField(verbose_name='Роль', max_length=30)
     first_name = models.CharField(verbose_name='Имя', max_length=255)
     last_name = models.CharField(verbose_name='Фамилия', max_length=255)
-    email = models.EmailField(verbose_name='Почта')
+    email = models.EmailField(verbose_name='Почта', unique=True)
     password = models.CharField(verbose_name='Пароль', max_length=255)
     sex = models.CharField(verbose_name='Пол', max_length=30)
     created_at = models.DateTimeField(verbose_name='Дата регистрации', auto_now_add=True)
-    settings = models.OneToOneField('UserSettings', on_delete=models.PROTECT)
+    settings = models.OneToOneField('UserSettings', on_delete=models.PROTECT, null=True)
     master_info = models.OneToOneField('MasterInfo', on_delete=models.PROTECT, null=True, blank=True)
 
     def __str__(self) -> str:
         return f'{self.first_name} {self.last_name}'
 
     def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
         settings = UserSettings.objects.create()
         self.settings = settings
         if self.role == UsersRoles.MASTER.value:
             master_info = MasterInfo.objects.create()
             self.master_info = master_info
-        super().save(*args, **kwargs)
+        super().save()
 
     class Meta:
         verbose_name = 'Пользователь'

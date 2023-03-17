@@ -1,3 +1,4 @@
+from django.db.utils import IntegrityError
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
@@ -26,6 +27,7 @@ class MastersRegistrationAPIView(GenericAPIView):
                 ),
             ),
             status.HTTP_400_BAD_REQUEST: 'Bad Request',
+            status.HTTP_409_CONFLICT: 'Email conflict'
         }
     )
     def post(self, request):
@@ -33,18 +35,21 @@ class MastersRegistrationAPIView(GenericAPIView):
         data['role'] = UsersRoles.MASTER.value
         master_serializer = MasterCreationSerializer(data=data)
         if master_serializer.is_valid():
-            master = master_serializer.save()
-            master.master_info.specializations.add(
-                *request.data.get('specializations_ids_list')
-            )
-            jwt_payload = {
-                'user_id': master.pk
-            }
-            jwt = JWT(jwt_payload)
-            response_data = {
-                'access_token': jwt.access_token,
-                'refresh_token': jwt.refresh_token
-            }
-            create_refresh_token(user_id=master.id, token=response_data.get('refresh_token'))
-            return Response(status=status.HTTP_201_CREATED, data=response_data)
+            try:
+                master = master_serializer.save()
+                master.master_info.specializations.add(
+                    *request.data.get('specializations_ids_list')
+                )
+                jwt_payload = {
+                    'user_id': master.pk
+                }
+                jwt = JWT(jwt_payload)
+                response_data = {
+                    'access_token': jwt.access_token,
+                    'refresh_token': jwt.refresh_token
+                }
+                create_refresh_token(user_id=master.id, token=response_data.get('refresh_token'))
+                return Response(status=status.HTTP_201_CREATED, data=response_data)
+            except IntegrityError:
+                return Response(status=status.HTTP_409_CONFLICT)
         return Response(status=status.HTTP_400_BAD_REQUEST)
