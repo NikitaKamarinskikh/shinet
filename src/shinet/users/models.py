@@ -20,7 +20,7 @@ class Users(models.Model):
     def save(self, *args, **kwargs):
         settings = UserSettings.objects.create()
         self.settings = settings
-        if kwargs.get('role') == UsersRoles.MASTER.value:
+        if self.role == UsersRoles.MASTER.value:
             master_info = MasterInfo.objects.create()
             self.master_info = master_info
         super().save(*args, **kwargs)

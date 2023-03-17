@@ -16,7 +16,7 @@ class UsersAdmin(admin.ModelAdmin):
 
 @admin.register(MasterInfo)
 class MasterInfoAdmin(admin.ModelAdmin):
-    list_display = ('location', 'rating')
+    list_display = ('pk', 'location', 'rating')
 
     class Meta:
         model = MasterInfo
