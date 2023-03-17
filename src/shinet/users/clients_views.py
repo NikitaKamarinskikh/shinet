@@ -7,6 +7,7 @@ from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from .clients_serializers import ClientCreationSerializer
 from .settings import UsersRoles
+from tokens.services import create_refresh_token
 from tokens.jwt import JWT
 
 
@@ -26,12 +27,12 @@ class ClientsRegistrationAPIView(GenericAPIView):
                 ),
             ),
             status.HTTP_400_BAD_REQUEST: 'Bad Request',
-        }
+        },
     )
     def post(self, request):
         data = request.data
         data['role'] = UsersRoles.CLIENT.value
-        client_serializer = ClientCreationSerializer(data=request.data)
+        client_serializer = ClientCreationSerializer(data=data)
         if client_serializer.is_valid():
             client = client_serializer.save()
             jwt_payload = {
@@ -42,6 +43,8 @@ class ClientsRegistrationAPIView(GenericAPIView):
                 'access_token': jwt.access_token,
                 'refresh_token': jwt.refresh_token
             }
+            create_refresh_token(user_id=client.id, token=response_data.get('refresh_token'))
             return Response(status=status.HTTP_201_CREATED, data=response_data)
         return Response(status=status.HTTP_400_BAD_REQUEST)
+
 

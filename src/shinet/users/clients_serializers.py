@@ -1,16 +1,15 @@
-from rest_framework.serializers import ModelSerializer
+from rest_framework import serializers
 from .models import Users
 from .common_services import make_sha256_hash
 
 
-class ClientCreationSerializer(ModelSerializer):
+class ClientCreationSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    sex = serializers.CharField()
+    role = serializers.CharField(required=False)
 
     def create(self, validated_data):
-        validated_data['password'] = make_sha256_hash(validated_data['password'])
-        return super().create(validated_data)
-
-    class Meta:
-        model = Users
-        fields = ('email', 'password', 'first_name',
-                  'last_name', 'sex')
-
+        return Users.objects.create(**validated_data)

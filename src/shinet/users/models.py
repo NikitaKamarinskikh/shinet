@@ -1,5 +1,6 @@
 from django.db import models
 from services.models import Specializations
+from .settings import UsersRoles
 
 
 class Users(models.Model):
@@ -10,11 +11,19 @@ class Users(models.Model):
     password = models.CharField(verbose_name='Пароль', max_length=255)
     sex = models.CharField(verbose_name='Пол', max_length=30)
     created_at = models.DateTimeField(verbose_name='Дата регистрации', auto_now_add=True)
-    settings = models.OneToOneField('UserSettings', on_delete=models.PROTECT, null=True)
-    master_info = models.OneToOneField('MasterInfo', on_delete=models.PROTECT, null=True)
+    settings = models.OneToOneField('UserSettings', on_delete=models.PROTECT)
+    master_info = models.OneToOneField('MasterInfo', on_delete=models.PROTECT, null=True, blank=True)
 
     def __str__(self) -> str:
         return f'{self.first_name} {self.last_name}'
+
+    def save(self, *args, **kwargs):
+        settings = UserSettings.objects.create()
+        self.settings = settings
+        if kwargs.get('role') == UsersRoles.MASTER.value:
+            master_info = MasterInfo.objects.create()
+            self.master_info = master_info
+        super().save(*args, **kwargs)
 
     class Meta:
         verbose_name = 'Пользователь'
