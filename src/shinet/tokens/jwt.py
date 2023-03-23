@@ -2,7 +2,7 @@ from __future__ import annotations
 import string
 import random
 import hmac
-from typing import Tuple
+from typing import Tuple, Dict
 from datetime import datetime, timedelta, timezone
 from ast import literal_eval
 from json import dumps
@@ -23,6 +23,16 @@ def get_token_expiration_time_in_utc(token_lifetime_in_seconds: int) -> int:
 
 
 class JWT:
+    """
+    This class create JWT tokens.
+    If you pass a dict as parameter it will create a pair of access and refresh tokens,
+        and it will use the dict as payload.
+    If you pass a string as a parameter, it will try to decode the data and also create
+        a pair of access and refresh tokens with payload than was encoded in the string parameter
+
+    :param payload: payload
+    :type payload: dict or str
+    """
 
     def __init__(self, payload: dict | str):
         if not isinstance(payload, dict) and not isinstance(payload, str):
@@ -47,6 +57,21 @@ class JWT:
 
     def is_equal_signature(self, other: JWT) -> bool:
         return self._signature == other._signature
+
+    def as_dict(self) -> Dict[str, str]:
+        """
+        Returns dict with refresh and access tokens, for example:
+        {
+            'access_token': 'access_token_here',
+            'refresh_token': 'refresh_token_here'
+        }
+        :return: dict with refresh and access tokens
+        :rtype: Dict[str, str]
+        """
+        return {
+            'access_token': self.access_token,
+            'refresh_token': self.refresh_token
+        }
 
     @property
     def access_token(self) -> str:
