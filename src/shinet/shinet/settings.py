@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'users.apps.UsersConfig',
     'services.apps.ServicesConfig',
     'tokens.apps.TokensConfig',
+    'subscriptions.apps.SubscriptionsConfig',
 ]
 
 MIDDLEWARE = [
