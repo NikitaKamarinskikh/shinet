@@ -8,6 +8,7 @@ from tokens.jwt import JWT
 from tokens.services import create_refresh_token
 from .serializers import MasterCreationSerializer
 from users.settings import UsersRoles
+from .registration_services import save_phone_numbers
 
 
 class MastersRegistrationAPIView(GenericAPIView):
@@ -36,6 +37,8 @@ class MastersRegistrationAPIView(GenericAPIView):
         if master_serializer.is_valid():
             try:
                 master = master_serializer.save()
+                if request.data.get('phone_numbers_lit') is not None:
+                    save_phone_numbers(master.pk, request.data.get('phone_numbers_lit'))
                 master.master_info.specializations.add(
                     *request.data.get('specializations_ids_list')
                 )

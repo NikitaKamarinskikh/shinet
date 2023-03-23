@@ -49,15 +49,6 @@ class UserSettings(models.Model):
         verbose_name_plural = 'Настройки пользователей'
 
 
-class UsersImages(models.Model):
-    user = models.ForeignKey(Users, verbose_name='Пользователь', on_delete=models.CASCADE)
-    image = models.ImageField(verbose_name='Изображение')
-
-    class Meta:
-        verbose_name = 'Изображение пользователя'
-        verbose_name_plural = 'Изображения пользователей'
-
-
 class UsersPhonesNumbers(models.Model):
     user = models.ForeignKey(Users, verbose_name='Пользователь', on_delete=models.CASCADE)
     phone_number = models.CharField(verbose_name='Номер телефона', max_length=255)

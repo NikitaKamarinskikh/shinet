@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import Users, MasterInfo, UserSettings,\
-    UsersImages, UsersPhonesNumbers, UnregisteredClients
+    UsersPhonesNumbers, UnregisteredClients
 
 
 @admin.register(Users)
@@ -27,13 +27,6 @@ class UsersSettingsAdmin(admin.ModelAdmin):
 
     class Meta:
         model = UserSettings
-
-
-@admin.register(UsersImages)
-class UserImagesAdmin(admin.ModelAdmin):
-
-    class Meta:
-        model = UsersImages
 
 
 @admin.register(UsersPhonesNumbers)
