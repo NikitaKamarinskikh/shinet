@@ -1,9 +1,11 @@
 from django.db import models
+from .settings import SubscriptionTypes
 
 
 class Subscriptions(models.Model):
     price = models.PositiveIntegerField(verbose_name='Стоимость')
-    type = models.CharField(verbose_name='Тип', max_length=255)
+    type = models.CharField(verbose_name='Тип', max_length=255,
+                            choices=SubscriptionTypes.choices(), unique=True)
 
     def __str__(self):
         return self.type.__str__()

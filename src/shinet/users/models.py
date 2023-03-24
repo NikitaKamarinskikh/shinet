@@ -1,5 +1,9 @@
+import datetime
+
 from django.db import models
 from services.models import Specializations
+from subscriptions.models import ActiveSubscriptions
+from subscriptions.services import get_trial_subscription
 from .settings import UsersRoles
 
 
@@ -22,7 +26,15 @@ class Users(models.Model):
         settings = UserSettings.objects.create()
         self.settings = settings
         if self.role == UsersRoles.MASTER.value:
-            master_info = MasterInfo.objects.create()
+            trial_subscription = get_trial_subscription()
+            active_subscription = ActiveSubscriptions.objects.create(
+                subscription=trial_subscription,
+                start=datetime.datetime.now(datetime.timezone.utc),
+                end=datetime.datetime.now(datetime.timezone.utc),
+            )
+            master_info = MasterInfo.objects.create(
+                active_subscription=active_subscription
+            )
             self.master_info = master_info
         super().save()
 
@@ -32,9 +44,12 @@ class Users(models.Model):
 
 
 class MasterInfo(models.Model):
-    location = models.CharField(verbose_name='Местоположение', max_length=100)
+    location = models.CharField(verbose_name='Местоположение', max_length=100, null=True,
+                                blank=True, default='Unknown')
     rating = models.PositiveIntegerField(verbose_name='Рейтинг', default=0)
-    specializations = models.ManyToManyField(Specializations, blank=True)
+    specializations = models.ManyToManyField(Specializations, blank=True, verbose_name='Специализации')
+    active_subscription = models.OneToOneField(ActiveSubscriptions, on_delete=models.PROTECT,
+                                               verbose_name='Активная подписка')
 
     class Meta:
         verbose_name = 'Информация мастера'

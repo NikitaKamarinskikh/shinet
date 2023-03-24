@@ -52,6 +52,6 @@ class MastersRegistrationAPIView(GenericAPIView):
                 }
                 create_refresh_token(user_id=master.id, token=response_data.get('refresh_token'))
                 return Response(status=status.HTTP_201_CREATED, data=response_data)
-            except IntegrityError:
+            except IntegrityError as e:
                 return Response(status=status.HTTP_409_CONFLICT)
         return Response(status=status.HTTP_400_BAD_REQUEST)
