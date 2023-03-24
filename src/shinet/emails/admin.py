@@ -1,3 +1,11 @@
 from django.contrib import admin
+from .models import VerificationCodes
 
-# Register your models here.
+
+@admin.register(VerificationCodes)
+class VerificationCodesAdmin(admin.ModelAdmin):
+    list_display = ('email', 'code')
+
+    class Meta:
+        model = VerificationCodes
+
