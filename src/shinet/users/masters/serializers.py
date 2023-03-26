@@ -20,7 +20,8 @@ class MasterCreationSerializer(serializers.Serializer):
     def create(self, validated_data):
         validated_data['password'] = make_sha256_hash(validated_data['password'])
         del validated_data['specializations_ids_list']
-        del validated_data['phone_numbers_lit']
+        if validated_data.get('phone_numbers_lit') is not None:
+            del validated_data['phone_numbers_lit']
         del validated_data['location']
         return Users.objects.create(**validated_data)
 

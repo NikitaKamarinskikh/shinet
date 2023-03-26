@@ -31,6 +31,9 @@ class MastersRegistrationAPIView(GenericAPIView):
         }
     )
     def post(self, request):
+        """TODO:
+            - add validation for request.data.get('specializations_ids_list')
+        """
         data = request.data
         data['role'] = UsersRoles.MASTER.value
         master_serializer = MasterCreationSerializer(data=data)
@@ -50,7 +53,7 @@ class MastersRegistrationAPIView(GenericAPIView):
                 jwt = JWT({
                     'user_id': master.pk
                 })
-                create_refresh_token(user_id=master.id, token=jwt.refresh_token)
+                create_refresh_token(user_id=master.pk, token=jwt.refresh_token)
                 return Response(status=status.HTTP_201_CREATED, data=jwt.as_dict())
             except IntegrityError:
                 return Response(status=status.HTTP_409_CONFLICT)

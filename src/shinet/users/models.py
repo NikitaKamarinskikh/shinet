@@ -17,6 +17,7 @@ class Users(models.Model):
     created_at = models.DateTimeField(verbose_name='Дата регистрации', auto_now_add=True)
     settings = models.OneToOneField('UserSettings', on_delete=models.CASCADE, null=True)
     master_info = models.OneToOneField('MasterInfo', on_delete=models.CASCADE, null=True, blank=True)
+    profile_image = models.ImageField(verbose_name='Фото профиля', null=True, blank=True)
 
     def __str__(self) -> str:
         return f'{self.first_name} {self.last_name}'

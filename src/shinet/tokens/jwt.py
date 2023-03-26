@@ -46,6 +46,8 @@ class JWT:
         self._header = JWT_DEFAULT_HEADER
         self._payload = payload
         self._signature = self._create_signature()
+        self._access_token = None
+        self._refresh_token = None
 
     def time_to_left(self) -> int:
         expiration_time = self._payload.get('exp')
@@ -75,11 +77,15 @@ class JWT:
 
     @property
     def access_token(self) -> str:
-        return self._create_access_token()
+        if self._access_token is None:
+            self._access_token = self._create_access_token()
+        return self._access_token
 
     @property
     def refresh_token(self) -> str:
-        return self._create_refresh_token()
+        if self._refresh_token is None:
+            self._refresh_token = self._create_refresh_token()
+        return self._refresh_token
 
     @property
     def payload(self) -> dict:

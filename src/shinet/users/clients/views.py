@@ -36,16 +36,11 @@ class ClientsRegistrationAPIView(GenericAPIView):
         if client_serializer.is_valid():
             try:
                 client = client_serializer.save()
-                jwt_payload = {
+                jwt = JWT({
                     'user_id': client.pk
-                }
-                jwt = JWT(jwt_payload)
-                response_data = {
-                    'access_token': jwt.access_token,
-                    'refresh_token': jwt.refresh_token
-                }
-                create_refresh_token(user_id=client.id, token=response_data.get('refresh_token'))
-                return Response(status=status.HTTP_201_CREATED, data=response_data)
-            except IntegrityError as e:
+                })
+                create_refresh_token(user_id=client.id, token=jwt.refresh_token)
+                return Response(status=status.HTTP_201_CREATED, data=jwt.as_dict())
+            except IntegrityError:
                 return Response(status=status.HTTP_409_CONFLICT)
         return Response(status=status.HTTP_400_BAD_REQUEST)
