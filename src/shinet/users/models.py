@@ -1,5 +1,5 @@
 import datetime
-
+import uuid
 from django.db import models
 from services.models import Specializations
 from subscriptions.models import ActiveSubscriptions
@@ -15,8 +15,8 @@ class Users(models.Model):
     password = models.CharField(verbose_name='Пароль', max_length=255)
     sex = models.CharField(verbose_name='Пол', max_length=30)
     created_at = models.DateTimeField(verbose_name='Дата регистрации', auto_now_add=True)
-    settings = models.OneToOneField('UserSettings', on_delete=models.PROTECT, null=True)
-    master_info = models.OneToOneField('MasterInfo', on_delete=models.PROTECT, null=True, blank=True)
+    settings = models.OneToOneField('UserSettings', on_delete=models.CASCADE, null=True)
+    master_info = models.OneToOneField('MasterInfo', on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self) -> str:
         return f'{self.first_name} {self.last_name}'
@@ -38,6 +38,11 @@ class Users(models.Model):
             self.master_info = master_info
         super().save()
 
+    def delete(self, *args, **kwargs):
+        self.settings.delete()
+        self.master_info.delete()
+        super().delete(*args, **kwargs)
+
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
@@ -48,8 +53,12 @@ class MasterInfo(models.Model):
                                 blank=True, default='Unknown')
     rating = models.PositiveIntegerField(verbose_name='Рейтинг', default=0)
     specializations = models.ManyToManyField(Specializations, blank=True, verbose_name='Специализации')
-    active_subscription = models.OneToOneField(ActiveSubscriptions, on_delete=models.PROTECT,
+    active_subscription = models.OneToOneField(ActiveSubscriptions, on_delete=models.CASCADE,
                                                verbose_name='Активная подписка')
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+
+    def __str__(self) -> str:
+        return self.uuid.__str__()
 
     class Meta:
         verbose_name = 'Информация мастера'
@@ -57,7 +66,7 @@ class MasterInfo(models.Model):
 
 
 class UserSettings(models.Model):
-    color_theme = models.CharField(verbose_name='Цветовая тема', max_length=255)
+    color_theme = models.CharField(verbose_name='Цветовая тема', max_length=255, default='LIGHT')
 
     class Meta:
         verbose_name = 'Настройки пользователя'

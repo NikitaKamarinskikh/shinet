@@ -16,7 +16,8 @@ class UsersAdmin(admin.ModelAdmin):
 
 @admin.register(MasterInfo)
 class MasterInfoAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'location', 'rating')
+    list_display = ('pk', 'uuid', 'location', 'rating')
+    list_display_links = ('pk', 'uuid')
 
     class Meta:
         model = MasterInfo
