@@ -1,4 +1,4 @@
-"""
+"""shinet_api_container
 WSGI config for shinet project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.

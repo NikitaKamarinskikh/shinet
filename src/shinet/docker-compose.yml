@@ -1,0 +1,58 @@
+version: "3.1"
+
+services:
+
+  db:
+    container_name: database
+    image: postgres
+    restart: always
+    ports:
+      - 5432:5432
+    env_file:
+      - "../.env"
+    volumes:
+      - pgdata:/var/lib/postgresql/data/
+    networks:
+      - shinet_net
+
+  shinet:
+    container_name: shinet
+    build:
+      context: .
+    command: gunicorn shinet.wsgi:application -b 0.0.0.0:8000 --reload
+    ports:
+      - 8000:8000
+    networks:
+      - shinet_net
+    restart: always
+    volumes:
+      - .:/src
+    env_file:
+      - "../.env"
+    depends_on:
+      - db
+
+  nginx:
+    build:
+      context: ./nginx/
+      dockerfile: Dockerfile
+    networks:
+      - shinet_net
+    depends_on:
+      - shinet
+      - db
+    ports:
+      - "80:80"
+    volumes:
+      - ./static/:/static
+    restart: always
+
+networks:
+  shinet_net:
+    driver: bridge
+
+volumes:
+  pgdata:
+
+
+
