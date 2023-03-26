@@ -3,9 +3,9 @@ This module contains additional functions for emails app
 """
 from __future__ import annotations
 from random import randint
-from .models import VerificationCodes
 from django.core.mail import send_mail
 from django.conf import settings
+from .models import VerificationCodes
 
 
 def send_verification_code(email: str, code: int) -> int:
@@ -75,6 +75,8 @@ def create_unique_code() -> int:
         code = randint(100000, 999999)
         if code not in current_codes:
             return code
+
+
 
 
 

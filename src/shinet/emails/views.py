@@ -2,6 +2,7 @@ from .models import VerificationCodes
 from .services import send_verification_code, save_verification_code,\
     get_verification_code_by_code_and_email_or_none, update_verification_code_by_email,\
     create_unique_code
+from datetime import datetime, timezone
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
@@ -60,6 +61,7 @@ class VerifyCodeAPIView(GenericAPIView):
         responses={
             status.HTTP_200_OK: 'Coded verified',
             status.HTTP_400_BAD_REQUEST: 'Bad Request',
+            status.HTTP_410_GONE: 'Code expired'
         }
     )
     def post(self, request):
@@ -70,7 +72,11 @@ class VerifyCodeAPIView(GenericAPIView):
             code = request.data.get('code')
             verification_code = get_verification_code_by_code_and_email_or_none(email, code)
             if verification_code is not None:
-                return Response(status=status.HTTP_200_OK)
+                if verification_code.expiration_time >= datetime.now(timezone.utc):
+                    verification_code.delete()
+                    return Response(status=status.HTTP_200_OK)
+                verification_code.delete()
+                return Response(status=status.HTTP_410_GONE)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
