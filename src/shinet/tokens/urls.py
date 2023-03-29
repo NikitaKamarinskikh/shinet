@@ -1,8 +1,9 @@
 from django.urls import path
-from .views import UpdateRefreshTokenAPIView
+from .views import UpdateAccessTokenAPIView
 
 
 urlpatterns = [
-    path('update/', UpdateRefreshTokenAPIView.as_view()),
+    path('update/', UpdateAccessTokenAPIView.as_view()),
 ]
+
 

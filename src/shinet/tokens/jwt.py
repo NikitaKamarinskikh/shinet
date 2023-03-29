@@ -5,7 +5,7 @@ import hmac
 from typing import Tuple, Dict
 from datetime import datetime, timedelta, timezone
 from ast import literal_eval
-from json import dumps
+from json import dumps, loads
 from hashlib import sha256
 from base64 import urlsafe_b64encode, urlsafe_b64decode
 from shinet.settings import env
@@ -43,6 +43,8 @@ class JWT:
     def __init__(self, payload: dict | str):
         if not isinstance(payload, dict) and not isinstance(payload, str):
             raise TypeError()
+        self._access_token = None
+        self._refresh_token = None
         if isinstance(payload, str):
             self._header = None
             self._payload = None
@@ -52,8 +54,6 @@ class JWT:
         self._header = JWT_DEFAULT_HEADER
         self._payload = payload
         self._signature = self._create_signature()
-        self._access_token = None
-        self._refresh_token = None
 
     def time_to_left(self) -> int:
         expiration_time = self._payload.get('exp')
@@ -101,8 +101,8 @@ class JWT:
         header, payload, signature = data.split('.')
         decoded_header = self._base64_url_decode(header)
         decoded_payload = self._base64_url_decode(payload)
-        self._header = literal_eval(decoded_header)
-        self._payload = literal_eval(decoded_payload)
+        # self._header = literal_eval(decoded_header)
+        self._payload = loads(decoded_payload)
         self._signature = signature
 
     def _create_access_token(self) -> str:
@@ -156,9 +156,10 @@ class JWT:
         d = data.encode('utf-8')
         return urlsafe_b64encode(d).rstrip(b'=').decode('utf-8')
 
-    def _base64_url_decode(self, data) -> str:
+    def _base64_url_decode(self, data: str) -> str:
         padding = b'=' * (4 - (len(data) % 4))
-        return urlsafe_b64decode(data + padding).decode('utf-8')
+        d = data.encode('utf-8')
+        return urlsafe_b64decode(d + padding).decode('utf-8')
 
 
 

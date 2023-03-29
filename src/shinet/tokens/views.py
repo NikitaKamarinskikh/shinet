@@ -1,16 +1,14 @@
-from django.shortcuts import render
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
-from .services import create_or_update_refresh_token
 from .jwt import JWT
-from .serializers import UpdateRefreshTokenSerializer
+from .serializers import UpdateAccessTokenSerializer
 
 
-class UpdateRefreshTokenAPIView(GenericAPIView):
-    serializer_class = UpdateRefreshTokenSerializer
+class UpdateAccessTokenAPIView(GenericAPIView):
+    serializer_class = UpdateAccessTokenSerializer
 
     @swagger_auto_schema(
         responses={
@@ -28,13 +26,16 @@ class UpdateRefreshTokenAPIView(GenericAPIView):
     )
     def post(self, request):
         data = request.data
-        serializer = UpdateRefreshTokenSerializer(data=data)
+        serializer = UpdateAccessTokenSerializer(data=data)
         if serializer.is_valid():
             user_id = int(data.get('user_id'))
-            jwt = JWT({'user_id': user_id})
-            return Response(status=status.HTTP_200_OK, data={
-                'access_token': jwt.access_token
-            })
+            refresh_token = data.get('refresh_token')
+            refresh_jwt = JWT(refresh_token)
+            if refresh_jwt.is_available():
+                jwt = JWT({'user_id': user_id})
+                return Response(status=status.HTTP_200_OK, data={
+                    'access_token': jwt.access_token
+                })
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
