@@ -41,10 +41,10 @@ class MastersRegistrationAPIView(GenericAPIView):
             try:
                 master = master_serializer.save()
                 location = request.data.get('location')
+                uuid = create_uuid()
                 master.master_info.location = location
+                master.master_info.uuid = uuid
                 master.master_info.save()
-                # uuid = create_uuid()
-                # print(uuid)
                 if request.data.get('phone_numbers_lit') is not None:
                     save_phone_numbers(master.pk, request.data.get('phone_numbers_lit'))
                 master.master_info.specializations.add(

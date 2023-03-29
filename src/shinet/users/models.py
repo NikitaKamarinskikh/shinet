@@ -56,7 +56,7 @@ class MasterInfo(models.Model):
     specializations = models.ManyToManyField(Specializations, blank=True, verbose_name='Специализации')
     active_subscription = models.OneToOneField(ActiveSubscriptions, on_delete=models.CASCADE,
                                                verbose_name='Активная подписка')
-    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    uuid = models.PositiveIntegerField(verbose_name='UUID', default=0, unique=True)
 
     def __str__(self) -> str:
         return self.uuid.__str__()
