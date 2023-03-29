@@ -6,7 +6,8 @@ DEFAULT_CODE_LIFETIME_IN_MINUTES = 5
 
 
 def get_code_expiration_time() -> datetime:
-    """Calculate code lifetime and return timestamp
+    """Calculate code lifetime (starts from current time in utc)
+        and return timestamp
     :return: code expiration time
     :rtype: datetime.datetime
     """

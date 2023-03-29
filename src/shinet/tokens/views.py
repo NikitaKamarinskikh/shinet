@@ -20,7 +20,6 @@ class UpdateRefreshTokenAPIView(GenericAPIView):
                     type=openapi.TYPE_OBJECT,
                     properties={
                         'access_token': openapi.Schema(type=openapi.TYPE_STRING),
-                        'refresh_token': openapi.Schema(type=openapi.TYPE_STRING),
                     },
                 ),
             ),
@@ -33,8 +32,9 @@ class UpdateRefreshTokenAPIView(GenericAPIView):
         if serializer.is_valid():
             user_id = int(data.get('user_id'))
             jwt = JWT({'user_id': user_id})
-            create_or_update_refresh_token(user_id, jwt.refresh_token)
-            return Response(status=status.HTTP_200_OK, data=jwt.as_dict())
+            return Response(status=status.HTTP_200_OK, data={
+                'access_token': jwt.access_token
+            })
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 

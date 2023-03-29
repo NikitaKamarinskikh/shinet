@@ -17,6 +17,12 @@ REFRESH_TOKEN_DEFAULT_LIFETIME_IN_SECONDS = 60 * 60 * 24 * 30
 
 
 def get_token_expiration_time_in_utc(token_lifetime_in_seconds: int) -> int:
+    """ Calculate token lifetime from current time in utc
+    :param token_lifetime_in_seconds: token lifetime in seconds
+    :type token_lifetime_in_seconds: int
+    :return: token expiration time
+    :rtype: int
+    """
     utc_datetime = datetime.now(timezone.utc)
     expiration_time = utc_datetime + timedelta(seconds=token_lifetime_in_seconds)
     return int(expiration_time.timestamp())
@@ -100,8 +106,8 @@ class JWT:
         self._signature = signature
 
     def _create_access_token(self) -> str:
-        encoded_header, encoded_payload = self._encode_header_and_payload()
         self._payload['exp'] = get_token_expiration_time_in_utc(ACCESS_TOKEN_DEFAULT_LIFETIME_IN_SECONDS)
+        encoded_header, encoded_payload = self._encode_header_and_payload()
         return f'{encoded_header}.' \
                f'{encoded_payload}.' \
                f'{self._signature}'
