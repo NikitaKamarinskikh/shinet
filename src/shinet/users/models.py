@@ -1,10 +1,13 @@
-import datetime
+from datetime import datetime, timedelta, timezone
 import uuid
 from django.db import models
 from services.models import Specializations
 from subscriptions.models import ActiveSubscriptions
 from subscriptions.services import get_trial_subscription
 from .settings import UsersRoles
+
+
+DEFAULT_VERIFICATION_CODE_LIFETIME_IN_MINUTES = 5
 
 
 class Users(models.Model):
@@ -30,8 +33,8 @@ class Users(models.Model):
             trial_subscription = get_trial_subscription()
             active_subscription = ActiveSubscriptions.objects.create(
                 subscription=trial_subscription,
-                start=datetime.datetime.now(datetime.timezone.utc),
-                end=datetime.datetime.now(datetime.timezone.utc),
+                start=datetime.now(timezone.utc),
+                end=datetime.now(timezone.utc),
             )
             master_info = MasterInfo.objects.create(
                 active_subscription=active_subscription
@@ -94,4 +97,30 @@ class UnregisteredClients(models.Model):
     class Meta:
         verbose_name = 'Незарегистрированный клиент'
         verbose_name_plural = 'Незарегистрированные клиенты'
+
+
+def get_code_expiration_time() -> datetime:
+    """Calculate code lifetime (starts from current time in utc)
+        and return timestamp
+    :return: code expiration time
+    :rtype: datetime.datetime
+    """
+    current_utc_time = datetime.now(timezone.utc)
+    code_expiration_time = current_utc_time + timedelta(minutes=DEFAULT_VERIFICATION_CODE_LIFETIME_IN_MINUTES)
+    return code_expiration_time
+
+
+class VerificationCodes(models.Model):
+    email = models.EmailField(verbose_name='Email', unique=True)
+    code = models.PositiveIntegerField(verbose_name='Код', unique=True)
+    expiration_time = models.DateTimeField(verbose_name='Время истечения',
+                                           default=get_code_expiration_time(), editable=False)
+
+    def __str__(self) -> str:
+        return f'{self.email} {self.code}'
+
+    class Meta:
+        verbose_name = 'Код для проверки'
+        verbose_name_plural = 'Коды для проверки'
+
 

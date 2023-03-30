@@ -50,7 +50,6 @@ INSTALLED_APPS = [
     'services.apps.ServicesConfig',
     'tokens.apps.TokensConfig',
     'subscriptions.apps.SubscriptionsConfig',
-    'emails.apps.EmailsConfig',
     'terms_of_use.apps.TermsOfUseConfig',
 ]
 

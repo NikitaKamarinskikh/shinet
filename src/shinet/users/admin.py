@@ -1,6 +1,14 @@
 from django.contrib import admin
 from .models import Users, MasterInfo, UserSettings,\
-    UsersPhonesNumbers, UnregisteredClients
+    UsersPhonesNumbers, UnregisteredClients, VerificationCodes
+
+
+@admin.register(VerificationCodes)
+class VerificationCodesAdmin(admin.ModelAdmin):
+    list_display = ('email', 'code', 'expiration_time')
+
+    class Meta:
+        model = VerificationCodes
 
 
 @admin.register(Users)

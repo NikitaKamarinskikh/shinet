@@ -3,6 +3,12 @@ from users.models import Users
 from users.common.services import make_sha256_hash
 
 
+class EmailSerializer(serializers.Serializer):
+    email = serializers.EmailField(error_messages={
+        'invalid': 'Invalid email address.',
+    })
+
+
 class UserAuthenticationSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField()
@@ -12,4 +18,19 @@ class UserAuthenticationSerializer(serializers.Serializer):
         password = self.validated_data.get('password')
         password = make_sha256_hash(password)
         return Users.objects.get(email=email, password=password)
+
+
+class IsEmailAvailableSerializers(EmailSerializer):
+    ...
+
+class SendVerificationCodeSerializer(EmailSerializer):
+   ...
+
+
+class VerifyCodeSerializer(EmailSerializer):
+    code = serializers.IntegerField()
+
+
+class UpdateVerificationCodeSerializer(EmailSerializer):
+    ...
 
