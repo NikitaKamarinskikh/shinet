@@ -29,10 +29,11 @@ SECRET_KEY = env.str('DJANGO_SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["localhost", '127.0.0.1', 'shinet', '178.208.75.93']
+ALLOWED_HOSTS = ["localhost", '127.0.0.1', 'shinet', '178.208.75.93', 'shinet.pro']
 
 CSRF_TRUSTED_ORIGINS = ['https://*.127.0.0.1', 'http://*.127.0.0.1',
-                        'http://*.178.208.75.93', 'https://*.178.208.75.93']
+                        'http://*.178.208.75.93', 'https://*.178.208.75.93',
+                        'http://*shinet*', 'https://*shinet*']
 
 # Application definition
 
