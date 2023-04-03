@@ -5,7 +5,7 @@ from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from datetime import datetime, timezone
 from tokens.jwt import JWT
-from tokens.services import create_refresh_token
+from tokens.services import create_refresh_token, get_refresh_token_or_none
 from users.models import Users, VerificationCodes
 from .serializers import UserAuthenticationSerializer, IsEmailAvailableSerializers, SendVerificationCodeSerializer,\
     VerifyCodeSerializer, UpdateVerificationCodeSerializer
@@ -39,16 +39,14 @@ class UserAuthenticationAPIView(GenericAPIView):
         if auth_serializer.is_valid():
             try:
                 user = auth_serializer.get_user()
-                jwt_payload = {
+                refresh_token = get_refresh_token_or_none(user.pk)
+                if refresh_token is not None:
+                    return Response(status=status.HTTP_304_NOT_MODIFIED)
+                jwt = JWT({
                     'user_id': user.pk
-                }
-                jwt = JWT(jwt_payload)
-                response_data = {
-                    'access_token': jwt.access_token,
-                    'refresh_token': jwt.refresh_token
-                }
-                create_refresh_token(user_id=user.id, token=response_data.get('refresh_token'))
-                return Response(status=status.HTTP_200_OK, data=response_data)
+                })
+                create_refresh_token(user_id=user.id, token=jwt.refresh_token)
+                return Response(status=status.HTTP_200_OK, data=jwt.as_dict())
             except Users.DoesNotExist:
                 return Response(status=status.HTTP_404_NOT_FOUND)
         else:
