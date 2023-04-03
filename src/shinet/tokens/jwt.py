@@ -4,11 +4,11 @@ import random
 import hmac
 from typing import Tuple, Dict
 from datetime import datetime, timedelta, timezone
-from ast import literal_eval
 from json import dumps, loads
 from hashlib import sha256
 from base64 import urlsafe_b64encode, urlsafe_b64decode
 from shinet.settings import env
+from .exceptions import InvalidAccessTokenException
 
 
 JWT_DEFAULT_HEADER = {"alg": "HS256", "typ": "JWT"}
@@ -46,11 +46,14 @@ class JWT:
         self._access_token = None
         self._refresh_token = None
         if isinstance(payload, str):
-            self._header = None
-            self._payload = None
-            self._signature = ''
-            self._decode_parameters_from_string(payload)
-            return
+            try:
+                self._header = None
+                self._payload = None
+                self._signature = ''
+                self._decode_parameters_from_string(payload)
+                return
+            except:
+                raise InvalidAccessTokenException()
         self._header = JWT_DEFAULT_HEADER
         self._payload = payload
         self._signature = self._create_signature()
@@ -61,6 +64,10 @@ class JWT:
         return int(expiration_time - current_time)
 
     def is_available(self) -> bool:
+        """Check is access_token is still available
+        :return: True if available else False
+        :rtype: bool
+        """
         return self.time_to_left() > 0
 
     def is_equal_signature(self, other: JWT) -> bool:

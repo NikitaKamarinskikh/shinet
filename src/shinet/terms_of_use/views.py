@@ -1,16 +1,25 @@
+from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
-from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from tokens.decorators import check_access_token
 
 
-class TermsOfUseAPIView(GenericAPIView):
+class TermsOfUseAPIView(APIView):
 
     @swagger_auto_schema(
-        responses={
-            status.HTTP_201_CREATED: 'Data',
-        }
+        request_headers={
+            'Authorization': 'Bearer <token>'
+        },
+        manual_parameters=[
+            openapi.Parameter(
+                'Authorization',
+                openapi.IN_HEADER,
+                'Access token',
+                type=openapi.TYPE_STRING),
+        ],
     )
     @check_access_token
     def get(self, request):

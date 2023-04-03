@@ -1,15 +1,21 @@
 from typing import Callable
+from rest_framework.response import Response
+from rest_framework import status
+from .jwt import JWT
+from .exceptions import InvalidAccessTokenException
 
 
 def check_access_token(func: Callable):
 
     def wrapper(*args, **kwargs):
         request = args[1]
-        auth = request.META.get('AUTHORIZATION')
-        return func(*args, **kwargs)
+        access_token = request.META.get('HTTP_AUTHORIZATION')
+        try:
+            jwt = JWT(access_token)
+            if jwt.is_available():
+                return func(*args, **kwargs)
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        except InvalidAccessTokenException:
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
     return wrapper
-
-
-
-
