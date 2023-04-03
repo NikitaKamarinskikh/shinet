@@ -33,7 +33,7 @@ ALLOWED_HOSTS = ["localhost", '127.0.0.1', 'shinet', '178.208.75.93', 'shinet.pr
 
 CSRF_TRUSTED_ORIGINS = ['https://*.127.0.0.1', 'http://*.127.0.0.1',
                         'http://*.178.208.75.93', 'https://*.178.208.75.93',
-                        'http://*shinet*', 'https://*shinet*']
+                        'http://shinet.pro', 'https://shinet.pro']
 
 # Application definition
 
@@ -64,9 +64,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
-CORS_ALLOW_ALL_ORIGINS = True
-
 
 ROOT_URLCONF = 'shinet.urls'
 
@@ -132,7 +129,7 @@ AUTH_PASSWORD_VALIDATORS = [
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
-
+CORS_ALLOW_ALL_ORIGINS = True
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/

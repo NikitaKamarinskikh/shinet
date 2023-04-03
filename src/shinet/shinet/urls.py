@@ -19,6 +19,7 @@ from django.urls import path, include
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
+
 schema_view = get_schema_view(
    openapi.Info(
       title="Shinet API",
@@ -29,12 +30,13 @@ schema_view = get_schema_view(
       license=openapi.License(name=""),
    ),
    public=True,
-   permission_classes=[permissions.IsAuthenticated],
+   permission_classes=[permissions.AllowAny],
 )
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/v1/auth/', include('users.auth_urls')),
     path('api/v1/users/', include('users.urls')),
     path('api/v1/tokens/', include('tokens.urls')),
     path('api/v1/terms_of_use/', include('terms_of_use.urls')),
