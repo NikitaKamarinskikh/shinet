@@ -1,19 +1,17 @@
 from django.db.utils import IntegrityError
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.generics import GenericAPIView
+from rest_framework.generics import CreateAPIView
 from .serializers import ClientCreationSerializer
 from users.settings import UsersRoles
 from tokens.services import create_refresh_token
 from tokens.jwt import JWT
 
 
-class ClientsRegistrationAPIView(GenericAPIView):
+class ClientsRegistrationAPIView(CreateAPIView):
     serializer_class = ClientCreationSerializer
-    parser_classes = (FormParser, MultiPartParser,)
 
     @swagger_auto_schema(
         responses={

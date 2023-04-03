@@ -2,7 +2,6 @@ from django.db.utils import IntegrityError
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
-from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from tokens.jwt import JWT
@@ -14,7 +13,6 @@ from .registration_services import save_phone_numbers, create_uuid
 
 class MastersRegistrationAPIView(GenericAPIView):
     serializer_class = MasterCreationSerializer
-    parser_classes = (FormParser, MultiPartParser)
 
     @swagger_auto_schema(
         responses={
