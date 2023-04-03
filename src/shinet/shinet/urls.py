@@ -20,29 +20,27 @@ from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from django.conf.urls.static import static
 from django.conf import settings
-
+from shinet.settings import env
 
 schema_view = get_schema_view(
-   openapi.Info(
-      title="Shinet API",
-      default_version='v1',
-      description="Shinet api documentations",
-      terms_of_service="",
-      contact=openapi.Contact(email=""),
-      license=openapi.License(name=""),
-   ),
-   public=True,
-   permission_classes=[permissions.AllowAny],
+    openapi.Info(
+        title="Shinet API",
+        default_version='v1',
+        description="Shinet api documentations",
+        terms_of_service="",
+        contact=openapi.Contact(email=""),
+        license=openapi.License(name=""),
+    ),
+    public=True,
+    permission_classes=[permissions.AllowAny],
+    url=env.str('SWAGGER_URL')
 )
 
-
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/v1/auth/', include('users.urls.auth')),
-    path('api/v1/registration/', include('users.urls.registration')),
-    # path('api/v1/clients/', include('users.clients.urls')),
-    # path('api/v1/masters/', include('users.masters.urls')),
-    path('api/v1/tokens/', include('tokens.urls')),
-    path('api/v1/terms-of-use/', include('terms_of_use.urls')),
-    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+  path('admin/', admin.site.urls),
+  path('api/v1/auth/', include('users.urls.auth')),
+  path('api/v1/registration/', include('users.urls.registration')),
+  path('api/v1/tokens/', include('tokens.urls')),
+  path('api/v1/terms-of-use/', include('terms_of_use.urls')),
+  path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

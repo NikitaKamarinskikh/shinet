@@ -27,13 +27,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = env.str('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env.bool('DEBUG_MODE')
 
-ALLOWED_HOSTS = ["localhost", '127.0.0.1', 'shinet', '178.208.75.93', 'shinet.pro']
+ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS')
 
-CSRF_TRUSTED_ORIGINS = ['https://*.127.0.0.1', 'http://*.127.0.0.1',
-                        'http://*.178.208.75.93', 'https://*.178.208.75.93',
-                        'http://shinet.pro', 'https://shinet.pro']
+CSRF_TRUSTED_ORIGINS = env.list('DJANGO_CSRF_TRUSTED_ORIGINS')
 
 # Application definition
 
@@ -150,7 +148,7 @@ USE_TZ = True
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = env.str('EMAIL_HOST')
 EMAIL_USE_TLS = False
-EMAIL_PORT = 465
+EMAIL_PORT = env.int('EMAIL_PORT')
 EMAIL_USE_SSL = True
 EMAIL_HOST_USER = env.str('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = env.str('EMAIL_HOST_PASSWORD')
