@@ -44,3 +44,9 @@ class ClientsRegistrationAPIView(GenericAPIView):
             except IntegrityError:
                 return Response(status=status.HTTP_409_CONFLICT)
         return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    def get_serializer(self, *args, **kwargs):
+        serializer = super().get_serializer(*args, **kwargs)
+        serializer.fields.pop('role', None)
+        return serializer
+

@@ -51,7 +51,8 @@ class UserAuthenticationAPIView(GenericAPIView):
                 return Response(status=status.HTTP_200_OK, data=response_data)
             except Users.DoesNotExist:
                 return Response(status=status.HTTP_404_NOT_FOUND)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(auth_serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
 
 class SendVerificationCodeAPIView(GenericAPIView):

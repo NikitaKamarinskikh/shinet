@@ -14,3 +14,4 @@ class ClientCreationSerializer(serializers.Serializer):
     def create(self, validated_data):
         validated_data['password'] = make_sha256_hash(validated_data['password'])
         return Users.objects.create(**validated_data)
+

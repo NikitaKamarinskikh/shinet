@@ -57,3 +57,8 @@ class MastersRegistrationAPIView(GenericAPIView):
             create_refresh_token(user_id=master.pk, token=jwt.refresh_token)
             return Response(status=status.HTTP_201_CREATED, data=jwt.as_dict())
         return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    def get_serializer(self, *args, **kwargs):
+        serializer = super().get_serializer(*args, **kwargs)
+        serializer.fields.pop('role', None)
+        return serializer
