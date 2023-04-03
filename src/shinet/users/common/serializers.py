@@ -3,6 +3,20 @@ from users.models import Users
 from users.common.services import make_sha256_hash
 
 
+class UserRegistrationSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    sex = serializers.CharField()
+    role = serializers.CharField(required=False)
+    profile_image = serializers.ImageField(required=False)
+
+    def create(self, validated_data):
+        validated_data['password'] = make_sha256_hash(validated_data['password'])
+        return Users.objects.create(**validated_data)
+
+
 class EmailSerializer(serializers.Serializer):
     email = serializers.EmailField(error_messages={
         'invalid': 'Invalid email address.',

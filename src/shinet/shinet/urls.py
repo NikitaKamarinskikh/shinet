@@ -38,9 +38,10 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/v1/auth/', include('users.auth_urls')),
-    path('api/v1/clients/', include('users.clients.urls')),
-    path('api/v1/masters/', include('users.masters.urls')),
+    path('api/v1/auth/', include('users.urls.auth')),
+    path('api/v1/registration/', include('users.urls.registration')),
+    # path('api/v1/clients/', include('users.clients.urls')),
+    # path('api/v1/masters/', include('users.masters.urls')),
     path('api/v1/tokens/', include('tokens.urls')),
     path('api/v1/terms-of-use/', include('terms_of_use.urls')),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
