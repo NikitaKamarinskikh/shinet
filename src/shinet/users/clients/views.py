@@ -1,6 +1,7 @@
 from django.db.utils import IntegrityError
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
@@ -12,6 +13,7 @@ from tokens.jwt import JWT
 
 class ClientsRegistrationAPIView(GenericAPIView):
     serializer_class = ClientCreationSerializer
+    parser_classes = (FormParser, MultiPartParser,)
 
     @swagger_auto_schema(
         responses={
@@ -28,9 +30,10 @@ class ClientsRegistrationAPIView(GenericAPIView):
             status.HTTP_400_BAD_REQUEST: 'Bad Request',
             status.HTTP_409_CONFLICT: 'Email conflict'
         },
+        operation_description='This is my view'
     )
     def post(self, request):
-        data = request.data
+        data = request.data.copy()
         data['role'] = UsersRoles.CLIENT.value
         client_serializer = ClientCreationSerializer(data=data)
         if client_serializer.is_valid():

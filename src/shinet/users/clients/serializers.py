@@ -10,6 +10,7 @@ class ClientCreationSerializer(serializers.Serializer):
     last_name = serializers.CharField()
     sex = serializers.CharField()
     role = serializers.CharField(required=False)
+    profile_image = serializers.ImageField(required=False)
 
     def create(self, validated_data):
         validated_data['password'] = make_sha256_hash(validated_data['password'])
