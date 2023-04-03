@@ -4,6 +4,8 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
+
+from subscriptions.models import Subscriptions
 from tokens.jwt import JWT
 from tokens.services import create_refresh_token
 from .serializers import MasterCreationSerializer
@@ -31,30 +33,27 @@ class MastersRegistrationAPIView(GenericAPIView):
         }
     )
     def post(self, request):
-        """TODO:
-            - add validation for request.data.get('specializations_ids_list')
-        """
         data = request.data
         data['role'] = UsersRoles.MASTER.value
         master_serializer = MasterCreationSerializer(data=data)
         if master_serializer.is_valid():
+            master = master_serializer.save()
+            location = request.data.get('location')
+            uuid = create_uuid()
+            master.master_info.location = location
+            master.master_info.uuid = uuid
+            master.master_info.save()
+            if request.data.get('phone_numbers_lit') is not None:
+                save_phone_numbers(master.pk, request.data.get('phone_numbers_lit'))
             try:
-                master = master_serializer.save()
-                location = request.data.get('location')
-                uuid = create_uuid()
-                master.master_info.location = location
-                master.master_info.uuid = uuid
-                master.master_info.save()
-                if request.data.get('phone_numbers_lit') is not None:
-                    save_phone_numbers(master.pk, request.data.get('phone_numbers_lit'))
                 master.master_info.specializations.add(
                     *request.data.get('specializations_ids_list')
                 )
-                jwt = JWT({
-                    'user_id': master.pk
-                })
-                create_refresh_token(user_id=master.pk, token=jwt.refresh_token)
-                return Response(status=status.HTTP_201_CREATED, data=jwt.as_dict())
             except IntegrityError:
-                return Response(status=status.HTTP_409_CONFLICT)
+                ...
+            jwt = JWT({
+                'user_id': master.pk
+            })
+            create_refresh_token(user_id=master.pk, token=jwt.refresh_token)
+            return Response(status=status.HTTP_201_CREATED, data=jwt.as_dict())
         return Response(status=status.HTTP_400_BAD_REQUEST)

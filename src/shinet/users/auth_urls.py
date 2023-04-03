@@ -1,5 +1,5 @@
 from django.urls import path
-from .common.views import UserAuthenticationAPIView,SendVerificationCodeAPIView, VerifyCodeAPIView,\
+from users.common.views import UserAuthenticationAPIView,SendVerificationCodeAPIView, VerifyCodeAPIView,\
     UpdateVerificationCodeAPIView
 
 
