@@ -29,8 +29,23 @@ class UserAuthenticationAPIView(GenericAPIView):
                     },
                 ),
             ),
-            status.HTTP_400_BAD_REQUEST: 'Bad request',
-            status.HTTP_404_NOT_FOUND: 'User not found',
+            status.HTTP_304_NOT_MODIFIED: 'Already authorized',
+            status.HTTP_422_UNPROCESSABLE_ENTITY: openapi.Response(
+                description='Validation error',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'email': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description='Validation error message'
+                        ),
+                        'password': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description='Validation error message'
+                        ),
+                    }
+                )
+            )
         }
     )
     def post(self, request):
@@ -48,7 +63,9 @@ class UserAuthenticationAPIView(GenericAPIView):
                 create_refresh_token(user_id=user.id, token=jwt.refresh_token)
                 return Response(status=status.HTTP_200_OK, data=jwt.as_dict())
             except Users.DoesNotExist:
-                return Response(status=status.HTTP_404_NOT_FOUND)
+                return Response({
+                        'password': 'Invalid password'
+                    }, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
         else:
             return Response(auth_serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
@@ -58,25 +75,16 @@ class SendVerificationCodeAPIView(GenericAPIView):
 
     @swagger_auto_schema(
         responses={
-            status.HTTP_200_OK: 'Coded sent successfully',
-            status.HTTP_400_BAD_REQUEST: 'Bad Request',
-            422: openapi.Response(
+            status.HTTP_200_OK: 'Code sent successfully',
+            status.HTTP_422_UNPROCESSABLE_ENTITY: openapi.Response(
                 description='Validation error',
                 schema=openapi.Schema(
                     type=openapi.TYPE_OBJECT,
                     properties={
-                        'detail': openapi.Schema(
-                            type=openapi.TYPE_OBJECT,
-                            properties={
-                                'field_name': openapi.Schema(
-                                    type=openapi.TYPE_ARRAY,
-                                    items=openapi.Schema(
-                                        type=openapi.TYPE_STRING,
-                                        description='Validation error message'
-                                    )
-                                )
-                            }
-                        )
+                        'email': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description='Validation error message'
+                        ),
                     }
                 )
             )
@@ -89,7 +97,9 @@ class SendVerificationCodeAPIView(GenericAPIView):
             email = request.data.get('email')
             user = get_user_by_email_or_none(email)
             if user is not None:
-                return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+                return Response({
+                    'email': 'Email already in use'
+                }, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
             code = create_unique_code()
             save_verification_code(email, code)
             send_verification_code(email, code)
@@ -97,22 +107,6 @@ class SendVerificationCodeAPIView(GenericAPIView):
         else:
             return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
-    # if some_condition:
-    #         raise ValidationError({'field_name': ['Error message']})
-
-    # def post(self, request):
-    #     serializer = self.serializer_class(data=request.data)
-    #     if serializer.is_valid():
-    #         # Do something
-    #         return Response({'message': 'Success'})
-    #     else:
-    #         return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
-    #
-    # def get_swagger_schema(self, *args, **kwargs):
-    #     schema = super().get_swagger_schema(*args, **kwargs)
-    #     schema['responses']['422']['description'] = 'Validation errors'
-    #     schema['responses']['422']['schema'] = MySerializer().fields['name'].error_messages
-    #     return schema
 
 class VerifyCodeAPIView(GenericAPIView):
     serializer_class = VerifyCodeSerializer
@@ -120,13 +114,27 @@ class VerifyCodeAPIView(GenericAPIView):
     @swagger_auto_schema(
         responses={
             status.HTTP_200_OK: 'Coded verified',
-            status.HTTP_400_BAD_REQUEST: 'Bad Request',
-            status.HTTP_410_GONE: 'Code expired'
+            status.HTTP_422_UNPROCESSABLE_ENTITY: openapi.Response(
+                description='Validation error',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'email': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description='Validation error message'
+                        ),
+                        'code': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description='Validation error message'
+                        ),
+                    }
+                )
+            )
         }
     )
     def post(self, request):
         data = request.data
-        serializer = IsEmailAvailableSerializers(data=data)
+        serializer = VerifyCodeSerializer(data=data)
         if serializer.is_valid():
             email = request.data.get('email')
             code = request.data.get('code')
@@ -136,8 +144,15 @@ class VerifyCodeAPIView(GenericAPIView):
                     verification_code.delete()
                     return Response(status=status.HTTP_200_OK)
                 verification_code.delete()
-                return Response(status=status.HTTP_410_GONE)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+                return Response({
+                    'email': 'Verification code expired'
+                }, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+            else:
+                return Response({
+                    'code': 'Invalid verification code'
+                }, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        else:
+            return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
 
 class UpdateVerificationCodeAPIView(GenericAPIView):
@@ -146,18 +161,33 @@ class UpdateVerificationCodeAPIView(GenericAPIView):
     @swagger_auto_schema(
         responses={
             status.HTTP_200_OK: 'Coded sent successfully',
-            status.HTTP_400_BAD_REQUEST: 'Bad Request',
+            status.HTTP_422_UNPROCESSABLE_ENTITY: openapi.Response(
+                description='Validation error',
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'email': openapi.Schema(
+                            type=openapi.TYPE_STRING,
+                            description='Validation error message'
+                        ),
+                    }
+                )
+            )
         }
     )
     def post(self, request):
         data = request.data
-        serializer = IsEmailAvailableSerializers(data=data)
+        serializer = UpdateVerificationCodeSerializer(data=data)
         if serializer.is_valid():
             email = request.data.get('email')
             code = create_unique_code()
             try:
+                send_verification_code(email, code)
                 update_verification_code_by_email(email, code)
                 return Response(status=status.HTTP_200_OK)
             except VerificationCodes.DoesNotExist:
-                return Response(status=status.HTTP_404_NOT_FOUND)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+                return Response({
+                    'code': 'Verification code does not exists'
+                }, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        else:
+            return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)

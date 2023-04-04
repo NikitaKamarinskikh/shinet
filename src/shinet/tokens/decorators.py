@@ -9,13 +9,16 @@ def check_access_token(func: Callable):
 
     def wrapper(*args, **kwargs):
         request = args[1]
-        access_token = request.META.get('HTTP_AUTHORIZATION')
+        auth_token = request.META.get('HTTP_AUTHORIZATION')
         try:
-            jwt = JWT(access_token)
+            bearer, token = auth_token.split()  # Bearer {token}
+            if bearer != 'Bearer':
+                return Response(status=status.HTTP_403_FORBIDDEN)
+            jwt = JWT(token)
             if jwt.is_available():
                 return func(*args, **kwargs)
             return Response(status=status.HTTP_403_FORBIDDEN)
-        except InvalidAccessTokenException:
+        except (InvalidAccessTokenException, ValueError, AttributeError):
             return Response(status=status.HTTP_403_FORBIDDEN)
 
     return wrapper

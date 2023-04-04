@@ -5,7 +5,7 @@ from users.common.views import UserAuthenticationAPIView,SendVerificationCodeAPI
 
 urlpatterns = [
     path('', UserAuthenticationAPIView.as_view()),
-    path('send-verification-code/', SendVerificationCodeAPIView.as_view()),
-    path('verify-code/', VerifyCodeAPIView.as_view()),
-    path('update-verification-code/', UpdateVerificationCodeAPIView.as_view())
+    path('codes/send/', SendVerificationCodeAPIView.as_view()),
+    path('codes/verify/', VerifyCodeAPIView.as_view()),
+    path('codes/update/', UpdateVerificationCodeAPIView.as_view())
 ]

@@ -1,3 +1,6 @@
+"""
+This module contains logic of client api views
+"""
 from django.db.utils import IntegrityError
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -25,10 +28,9 @@ class ClientsRegistrationAPIView(CreateAPIView):
                     },
                 ),
             ),
-            status.HTTP_400_BAD_REQUEST: 'Bad Request',
-            status.HTTP_409_CONFLICT: 'Email conflict'
+            status.HTTP_422_UNPROCESSABLE_ENTITY: 'Invalid parameters',
         },
-        operation_description='This is my view'
+        operation_description='You can also add `profile_image` parameter with client photo profile'
     )
     def post(self, request):
         data = request.data.copy()
@@ -43,11 +45,13 @@ class ClientsRegistrationAPIView(CreateAPIView):
                 create_refresh_token(user_id=client.id, token=jwt.refresh_token)
                 return Response(status=status.HTTP_201_CREATED, data=jwt.as_dict())
             except IntegrityError:
-                return Response(status=status.HTTP_409_CONFLICT)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+                return Response({
+                    'email': 'Email already in use'
+                }, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        else:
+            return Response(client_serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
     def get_serializer(self, *args, **kwargs):
         serializer = super().get_serializer(*args, **kwargs)
         serializer.fields.pop('role', None)
         return serializer
-

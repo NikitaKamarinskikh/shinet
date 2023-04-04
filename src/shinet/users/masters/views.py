@@ -26,9 +26,9 @@ class MastersRegistrationAPIView(GenericAPIView):
                     },
                 ),
             ),
-            status.HTTP_400_BAD_REQUEST: 'Bad Request',
-            status.HTTP_409_CONFLICT: 'Email conflict'
-        }
+            status.HTTP_422_UNPROCESSABLE_ENTITY: 'Invalid arguments',
+        },
+        operation_description='You can also add `profile_image` parameter with client photo profile'
     )
     def post(self, request):
         data = request.data
@@ -54,7 +54,8 @@ class MastersRegistrationAPIView(GenericAPIView):
             })
             create_refresh_token(user_id=master.pk, token=jwt.refresh_token)
             return Response(status=status.HTTP_201_CREATED, data=jwt.as_dict())
-        return Response(status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(master_serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
     def get_serializer(self, *args, **kwargs):
         serializer = super().get_serializer(*args, **kwargs)

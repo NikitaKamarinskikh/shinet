@@ -20,11 +20,15 @@ class TermsOfUseAPIView(APIView):
                 'Access token',
                 type=openapi.TYPE_STRING),
         ],
+        responses={
+            status.HTTP_200_OK: 'Data loaded successfully',
+            status.HTTP_403_FORBIDDEN: 'Forbidden'
+        }
     )
     @check_access_token
     def get(self, request):
         data = {
-            'text': 'Input terms of use here'
+            'text': 'Terms of use text'
         }
         return Response(
             status=status.HTTP_200_OK,
