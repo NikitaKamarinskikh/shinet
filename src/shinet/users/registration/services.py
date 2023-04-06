@@ -1,11 +1,12 @@
-"""
-This module contains functions with logic
-for masters registration
-"""
 from string import digits
 from random import choice
 from typing import Tuple
+from hashlib import sha256
 from users.models import UsersPhonesNumbers, MasterInfo
+
+
+def make_sha256_hash(string: str) -> str:
+    return sha256(string.encode('utf-8')).hexdigest()
 
 
 def save_phone_numbers(user_id: int, phone_numbers: Tuple[str]) -> None:
@@ -35,5 +36,3 @@ def create_uuid() -> int:
         uuid = ''.join(choice(digits) for _ in range(6))
         if uuid not in current_identifiers:
             return int(uuid)
-
-

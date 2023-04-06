@@ -1,21 +1,12 @@
-"""
-This module contains functions for
-"""
 from __future__ import annotations
-from hashlib import sha256
-from users.models import Users
 from random import randint
 from django.core.mail import send_mail
 from django.conf import settings
-from users.models import VerificationCodes
+from users.models import Users, VerificationCodes
 from users.settings import UsersStatuses
 
 
-def make_sha256_hash(string: str) -> str:
-    return sha256(string.encode('utf-8')).hexdigest()
-
-
-def get_user_by_email_or_none(email: str) -> str | None:
+def get_user_by_email_or_none(email: str) -> Users | None:
     return Users.objects.filter(email=email).first()
 
 
@@ -36,17 +27,18 @@ def send_verification_code(email: str, code: int) -> int:
 
 def save_verification_code(email: str, code: int) -> VerificationCodes:
     """Save verification code and emal to database
+    :type email: str
     :param email: user email
     :type email: str
     :param code: randomly generated unique digit
     :type code: int
     :raises IntegrityError: if email or code already exist in the table
-    :return: instance of VerificationCodes class
+    :return: instance of RegistrationVerificationCodes or RecoverVerificationCodes class
     """
     return VerificationCodes.objects.create(email=email, code=code)
 
 
-def get_verification_code_by_code_or_none(code: int) -> VerificationCodes | None:
+def get_verification_code_by_code_or_none(code: int) -> VerificationCodes:
     """Get instance of VerificationCodes if exists. Otherwise, returns None
     :param code: code from request
     :return: VerificationCodes or None
@@ -54,8 +46,7 @@ def get_verification_code_by_code_or_none(code: int) -> VerificationCodes | None
     return VerificationCodes.objects.filter(code=code).first()
 
 
-def get_verification_code_by_code_and_email_or_none(
-                email: str, code: int) -> VerificationCodes | None:
+def get_verification_code_by_code_and_email_or_none(email: str, code: int) -> VerificationCodes:
     """Search verification code by email and code
     :param code: current code
     :param email: user email

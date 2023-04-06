@@ -1,7 +1,6 @@
 from django.urls import path
-from users.masters.views import MastersRegistrationAPIView
-from users.clients.views import ClientsRegistrationAPIView
-from users.common.views import SendVerificationCodeAPIView, VerifyCodeAPIView,\
+from .views import MastersRegistrationAPIView, ClientsRegistrationAPIView
+from users.verification.views import SendVerificationCodeAPIView, VerifyCodeAPIView,\
     UpdateVerificationCodeAPIView
 
 urlpatterns = [

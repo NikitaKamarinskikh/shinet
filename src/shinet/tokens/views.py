@@ -26,7 +26,7 @@ class UpdateAccessTokenAPIView(GenericAPIView):
             status.HTTP_422_UNPROCESSABLE_ENTITY: 'Invalid parameters'
         }
     )
-    def post(self, request):
+    def patch(self, request):
         data = request.data
         serializer = UpdateAccessTokenSerializer(data=data)
         if serializer.is_valid():
