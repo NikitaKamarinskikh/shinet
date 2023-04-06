@@ -1,11 +1,6 @@
 from django.urls import path
-from users.common.views import UserAuthenticationAPIView,SendVerificationCodeAPIView, VerifyCodeAPIView,\
-    UpdateVerificationCodeAPIView
-
+from users.common.views import UserAuthenticationAPIView
 
 urlpatterns = [
     path('', UserAuthenticationAPIView.as_view()),
-    path('codes/send/', SendVerificationCodeAPIView.as_view()),
-    path('codes/verify/', VerifyCodeAPIView.as_view()),
-    path('codes/update/', UpdateVerificationCodeAPIView.as_view())
 ]
