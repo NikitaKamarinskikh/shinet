@@ -8,6 +8,7 @@ from random import randint
 from django.core.mail import send_mail
 from django.conf import settings
 from users.models import VerificationCodes
+from users.settings import UsersStatuses
 
 
 def make_sha256_hash(string: str) -> str:
@@ -85,3 +86,15 @@ def create_unique_code() -> int:
         code = randint(100000, 999999)
         if code not in current_codes:
             return code
+
+
+def is_user_blocked(user_id: int) -> bool:
+    """Check is master or client blocked
+    :param user_id: id of user
+    :raises Users.DoesNotExist: if user does not exists
+    :return: True if user blocked else False
+    """
+    user = Users.objects.get(pk=user_id)
+    return user.status == UsersStatuses.BLOCKED.value
+
+

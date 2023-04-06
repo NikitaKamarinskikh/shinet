@@ -13,7 +13,7 @@ class VerificationCodesAdmin(admin.ModelAdmin):
 
 @admin.register(Users)
 class UsersAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'first_name', 'last_name', 'role', 'email', 'created_at')
+    list_display = ('pk', 'first_name', 'last_name', 'role', 'email', 'status', 'created_at')
     list_filter = ('role', )
     search_fields = ('first_name', 'last_name', 'email')
     list_display_links = ('first_name', 'last_name', 'email')

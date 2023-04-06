@@ -7,6 +7,9 @@ from .models import Users
 class ClientRegistrationTest(APITestCase):
 
     def test_registration_1(self):
+        """
+        asd
+        """
         url = '/api/v1/users/clients/registration/'
         data = {
             'email': 'user@example.com',

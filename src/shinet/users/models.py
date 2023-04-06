@@ -4,7 +4,7 @@ from django.db import models
 from services.models import Specializations
 from subscriptions.models import ActiveSubscriptions
 from subscriptions.services import get_trial_subscription
-from .settings import UsersRoles
+from .settings import UsersRoles, UsersStatuses
 
 
 DEFAULT_VERIFICATION_CODE_LIFETIME_IN_MINUTES = 5
@@ -21,6 +21,7 @@ class Users(models.Model):
     settings = models.OneToOneField('UserSettings', on_delete=models.CASCADE, null=True)
     master_info = models.OneToOneField('MasterInfo', on_delete=models.CASCADE, null=True, blank=True)
     profile_image = models.ImageField(verbose_name='Фото профиля', null=True, blank=True)
+    status = models.CharField(verbose_name='Статус', max_length=100, default=UsersStatuses.ACTIVE.value)
 
     def __str__(self) -> str:
         return f'{self.first_name} {self.last_name}'
