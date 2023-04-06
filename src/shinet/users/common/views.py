@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from tokens.jwt import JWT
 from tokens.services import create_refresh_token, get_refresh_token_or_none
 from users.models import Users, VerificationCodes
+from users.settings import UsersStatuses
 from .serializers import UserAuthenticationSerializer, IsEmailAvailableSerializers, SendVerificationCodeSerializer,\
     VerifyCodeSerializer, UpdateVerificationCodeSerializer
 from .services import send_verification_code, save_verification_code, \
@@ -30,6 +31,7 @@ class UserAuthenticationAPIView(GenericAPIView):
                 ),
             ),
             status.HTTP_304_NOT_MODIFIED: 'Already authorized',
+            status.HTTP_403_FORBIDDEN: 'Forbidden (If user is blocked)',
             status.HTTP_422_UNPROCESSABLE_ENTITY: openapi.Response(
                 description='Validation error',
                 schema=openapi.Schema(
@@ -54,6 +56,8 @@ class UserAuthenticationAPIView(GenericAPIView):
         if auth_serializer.is_valid():
             try:
                 user = auth_serializer.get_user()
+                if user.status == UsersStatuses.BLOCKED.value:
+                    return Response(status=status.HTTP_403_FORBIDDEN)
                 refresh_token = get_refresh_token_or_none(user.pk)
                 if refresh_token is not None:
                     return Response(status=status.HTTP_304_NOT_MODIFIED)
