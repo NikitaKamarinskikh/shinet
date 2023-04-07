@@ -70,6 +70,23 @@ class MasterInfo(models.Model):
         verbose_name_plural = 'Информации мастеров'
 
 
+class Locations(models.Model):
+    city = models.CharField(verbose_name='Город', max_length=255)
+    district = models.CharField(verbose_name='Район', max_length=255)
+    street = models.CharField(verbose_name='Улица', max_length=255)
+    house = models.CharField(verbose_name='Дом', max_length=255)
+    office = models.CharField(verbose_name='Офис', max_length=255, null=True, blank=True)
+    floor = models.CharField(verbose_name='Этаж', max_length=255)
+    extra_info = models.TextField(verbose_name='Дополнительная информация', null=True, blank=True)
+
+    def __str__(self):
+        return f'{self.city} {self.district} {self.street}'
+
+    class Meta:
+        verbose_name = 'Локация'
+        verbose_name_plural = 'Локации'
+
+
 class UserSettings(models.Model):
     color_theme = models.CharField(verbose_name='Цветовая тема', max_length=255, default='LIGHT')
 

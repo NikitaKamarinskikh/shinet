@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import Users, MasterInfo, UserSettings,\
-    UsersPhonesNumbers, UnregisteredClients, VerificationCodes
+    UsersPhonesNumbers, UnregisteredClients, VerificationCodes, Locations
 
 
 @admin.register(VerificationCodes)
@@ -29,6 +29,14 @@ class MasterInfoAdmin(admin.ModelAdmin):
 
     class Meta:
         model = MasterInfo
+
+
+@admin.register(Locations)
+class LocationsAdmin(admin.ModelAdmin):
+    list_display = ('city', 'district', 'street', 'house', 'office', 'floor')
+
+    class Meta:
+        model = Locations
 
 
 @admin.register(UserSettings)
