@@ -72,7 +72,7 @@ class MasterInfo(models.Model):
 
 class Locations(models.Model):
     city = models.CharField(verbose_name='Город', max_length=255)
-    district = models.CharField(verbose_name='Район', max_length=255)
+    district = models.CharField(verbose_name='Район', max_length=255, null=True, blank=True)
     street = models.CharField(verbose_name='Улица', max_length=255)
     house = models.CharField(verbose_name='Дом', max_length=255)
     office = models.CharField(verbose_name='Офис', max_length=255, null=True, blank=True)
