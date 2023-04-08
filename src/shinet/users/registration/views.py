@@ -7,11 +7,17 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
+from datetime import datetime, timedelta, timezone
+from subscriptions.models import ActiveSubscriptions
+from subscriptions.services import get_trial_subscription
 from tokens.jwt import JWT
 from tokens.services import create_refresh_token
 from .serializers import MasterRegistrationSerializer, ClientRegistrationSerializer
 from users.settings import UsersRoles
 from .services import save_phone_numbers, create_uuid
+from ..locations.serializers import LocationSerializer
+from ..models import UserSettings, MasterInfo, Locations
+from ..verification.services import get_user_by_email_or_none
 
 
 class ClientsRegistrationAPIView(GenericAPIView):
@@ -40,6 +46,9 @@ class ClientsRegistrationAPIView(GenericAPIView):
         if client_serializer.is_valid():
             try:
                 client = client_serializer.save()
+                settings = UserSettings.objects.create()
+                client.settings = settings
+                client.save()
                 jwt = JWT({
                     'user_id': client.pk
                 })
@@ -82,25 +91,47 @@ class MastersRegistrationAPIView(GenericAPIView):
         data['role'] = UsersRoles.MASTER.value
         master_serializer = MasterRegistrationSerializer(data=data)
         if master_serializer.is_valid():
+            email = request.data.get('email')
+            if get_user_by_email_or_none(email) is not None:
+                return Response(status=status.HTTP_422_UNPROCESSABLE_ENTITY)
             master = master_serializer.save()
-            location = request.data.get('location')
-            uuid = create_uuid()
-            master.master_info.location = location
-            master.master_info.uuid = uuid
-            master.master_info.save()
-            if request.data.get('phone_numbers_lit') is not None:
-                save_phone_numbers(master.pk, request.data.get('phone_numbers_lit'))
-            try:
-                master.master_info.specializations.add(
-                    *request.data.get('specializations_ids_list')
-                )
-            except IntegrityError:
-                ...
-            jwt = JWT({
-                'user_id': master.pk
-            })
-            create_refresh_token(user_id=master.pk, token=jwt.refresh_token)
-            return Response(status=status.HTTP_201_CREATED, data=jwt.as_dict())
+            trial_subscription = get_trial_subscription()
+            active_subscription = ActiveSubscriptions.objects.create(
+                subscription=trial_subscription,
+                start=datetime.now(timezone.utc),
+                end=datetime.now(timezone.utc),
+            )
+            master_info = MasterInfo.objects.create(
+                active_subscription=active_subscription
+            )
+            master.master_info = master_info
+
+            settings = UserSettings.objects.create()
+            master.settings = settings
+            master.save()
+
+            location_serializer = LocationSerializer(data=request.data.get('location'))
+            if location_serializer.is_valid():
+                location = location_serializer.save()
+                uuid = create_uuid()
+
+                master.master_info.location = location
+                master.master_info.uuid = uuid
+                master.master_info.save()
+                if request.data.get('phone_numbers_lit') is not None:
+                    save_phone_numbers(master.pk, request.data.get('phone_numbers_lit'))
+                try:
+                    master.master_info.specializations.add(
+                        *request.data.get('specializations_ids_list')
+                    )
+                except IntegrityError:
+                    ...
+                jwt = JWT({
+                    'user_id': master.pk
+                })
+                create_refresh_token(user_id=master.pk, token=jwt.refresh_token)
+                return Response(status=status.HTTP_201_CREATED, data=jwt.as_dict())
+            return Response(location_serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
         else:
             return Response(master_serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 

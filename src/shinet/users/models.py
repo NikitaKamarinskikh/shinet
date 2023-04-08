@@ -26,23 +26,6 @@ class Users(models.Model):
     def __str__(self) -> str:
         return f'{self.first_name} {self.last_name}'
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        settings = UserSettings.objects.create()
-        self.settings = settings
-        if self.role == UsersRoles.MASTER.value:
-            trial_subscription = get_trial_subscription()
-            active_subscription = ActiveSubscriptions.objects.create(
-                subscription=trial_subscription,
-                start=datetime.now(timezone.utc),
-                end=datetime.now(timezone.utc),
-            )
-            master_info = MasterInfo.objects.create(
-                active_subscription=active_subscription
-            )
-            self.master_info = master_info
-        super().save()
-
     def delete(self, *args, **kwargs):
         self.settings.delete()
         self.master_info.delete()
@@ -54,8 +37,7 @@ class Users(models.Model):
 
 
 class MasterInfo(models.Model):
-    location = models.CharField(verbose_name='Местоположение', max_length=100, null=True,
-                                blank=True, default='Unknown')
+    location = models.OneToOneField('Locations', verbose_name='Адрес', on_delete=models.CASCADE, null=True)
     rating = models.PositiveIntegerField(verbose_name='Рейтинг', default=0)
     specializations = models.ManyToManyField(Specializations, blank=True, verbose_name='Специализации')
     active_subscription = models.OneToOneField(ActiveSubscriptions, on_delete=models.CASCADE,
@@ -64,6 +46,11 @@ class MasterInfo(models.Model):
 
     def __str__(self) -> str:
         return self.uuid.__str__()
+
+    def delete(self, *args, **kwargs):
+        self.location.delete()
+        self.active_subscription.delete()
+        super().delete(*args, **kwargs)
 
     class Meta:
         verbose_name = 'Информация мастера'
