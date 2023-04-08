@@ -42,6 +42,7 @@ urlpatterns = [
     path('api/v1/registration/', include('users.registration.urls')),
     path('api/v1/recovery/', include('users.recovery.urls')),
     path('api/v1/tokens/', include('tokens.urls')),
+    path('api/v1/services/', include('services.urls')),
     path('api/v1/locations/', include('users.locations.urls')),
     path('api/v1/terms-of-use/', include('terms_of_use.urls')),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
