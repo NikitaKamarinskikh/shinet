@@ -54,6 +54,10 @@ INSTALLED_APPS = [
     'terms_of_use.apps.TermsOfUseConfig',
 ]
 
+REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'users.exceptions.custom_exception_handler'
+}
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

@@ -63,7 +63,7 @@ class Locations(models.Model):
     street = models.CharField(verbose_name='Улица', max_length=255)
     house = models.CharField(verbose_name='Дом', max_length=255)
     office = models.CharField(verbose_name='Офис', max_length=255, null=True, blank=True)
-    floor = models.CharField(verbose_name='Этаж', max_length=255)
+    floor = models.CharField(verbose_name='Этаж', max_length=255, null=True, blank=True)
     extra_info = models.TextField(verbose_name='Дополнительная информация', null=True, blank=True)
 
     def __str__(self):

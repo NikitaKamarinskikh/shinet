@@ -13,6 +13,7 @@ from subscriptions.services import get_trial_subscription
 from tokens.jwt import JWT
 from tokens.services import create_refresh_token
 from .serializers import MasterRegistrationSerializer, ClientRegistrationSerializer
+from shinet.services import HTTP_422_RESPONSE_SWAGGER_SCHEME,make_422_response
 from users.settings import UsersRoles
 from .services import save_phone_numbers, create_uuid
 from ..locations.serializers import LocationSerializer
@@ -25,7 +26,7 @@ class ClientsRegistrationAPIView(GenericAPIView):
 
     @swagger_auto_schema(
         responses={
-            status.HTTP_201_CREATED: openapi.Response(
+            status.HTTP_200_OK: openapi.Response(
                 description='Client created',
                 schema=openapi.Schema(
                     type=openapi.TYPE_OBJECT,
@@ -35,7 +36,7 @@ class ClientsRegistrationAPIView(GenericAPIView):
                     },
                 ),
             ),
-            status.HTTP_422_UNPROCESSABLE_ENTITY: 'Invalid parameters',
+            status.HTTP_422_UNPROCESSABLE_ENTITY: HTTP_422_RESPONSE_SWAGGER_SCHEME
         },
         operation_description='You can also add `profile_image` parameter with client photo profile'
     )
@@ -43,23 +44,21 @@ class ClientsRegistrationAPIView(GenericAPIView):
         data = request.data.copy()
         data['role'] = UsersRoles.CLIENT.value
         client_serializer = ClientRegistrationSerializer(data=data)
-        if client_serializer.is_valid():
-            try:
-                client = client_serializer.save()
-                settings = UserSettings.objects.create()
-                client.settings = settings
-                client.save()
-                jwt = JWT({
-                    'user_id': client.pk
-                })
-                create_refresh_token(user_id=client.id, token=jwt.refresh_token)
-                return Response(status=status.HTTP_201_CREATED, data=jwt.as_dict())
-            except IntegrityError:
-                return Response({
-                    'email': 'Email already in use'
-                }, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
-        else:
-            return Response(client_serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        client_serializer.is_valid(raise_exception=True)
+        try:
+            client = client_serializer.save()
+            settings = UserSettings.objects.create()
+            client.settings = settings
+            client.save()
+            jwt = JWT({
+                'user_id': client.pk
+            })
+            create_refresh_token(user_id=client.id, token=jwt.refresh_token)
+            return Response(status=status.HTTP_200_OK, data=jwt.as_dict())
+        except IntegrityError:
+            return make_422_response(
+                (('email', 'Email already in use'),)
+            )
 
     def get_serializer(self, *args, **kwargs):
         serializer = super().get_serializer(*args, **kwargs)
@@ -82,58 +81,57 @@ class MastersRegistrationAPIView(GenericAPIView):
                     },
                 ),
             ),
-            status.HTTP_422_UNPROCESSABLE_ENTITY: 'Invalid arguments',
+            status.HTTP_422_UNPROCESSABLE_ENTITY: HTTP_422_RESPONSE_SWAGGER_SCHEME
         },
         operation_description='You can also add `profile_image` parameter with client photo profile'
     )
     def post(self, request):
         data = request.data
         data['role'] = UsersRoles.MASTER.value
+
         master_serializer = MasterRegistrationSerializer(data=data)
-        if master_serializer.is_valid():
-            email = request.data.get('email')
-            if get_user_by_email_or_none(email) is not None:
-                return Response(status=status.HTTP_422_UNPROCESSABLE_ENTITY)
-            master = master_serializer.save()
-            trial_subscription = get_trial_subscription()
-            active_subscription = ActiveSubscriptions.objects.create(
-                subscription=trial_subscription,
-                start=datetime.now(timezone.utc),
-                end=datetime.now(timezone.utc),
+        location_serializer = LocationSerializer(data=request.data.get('location'))
+
+        master_serializer.is_valid(raise_exception=True)
+        location_serializer.is_valid(raise_exception=True)
+
+        email = request.data.get('email')
+        if get_user_by_email_or_none(email) is not None:
+            return Response(status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        master = master_serializer.save()
+        trial_subscription = get_trial_subscription()
+        active_subscription = ActiveSubscriptions.objects.create(
+            subscription=trial_subscription,
+            start=datetime.now(timezone.utc),
+            end=datetime.now(timezone.utc),
+        )
+        master_info = MasterInfo.objects.create(
+            active_subscription=active_subscription
+        )
+        master.master_info = master_info
+
+        settings = UserSettings.objects.create()
+        master.settings = settings
+        master.save()
+
+        location = location_serializer.save()
+        uuid = create_uuid()
+        master.master_info.location = location
+        master.master_info.uuid = uuid
+        master.master_info.save()
+        if request.data.get('phone_numbers_lit') is not None:
+            save_phone_numbers(master.pk, request.data.get('phone_numbers_lit'))
+        try:
+            master.master_info.specializations.add(
+                *request.data.get('specializations_ids_list')
             )
-            master_info = MasterInfo.objects.create(
-                active_subscription=active_subscription
-            )
-            master.master_info = master_info
-
-            settings = UserSettings.objects.create()
-            master.settings = settings
-            master.save()
-
-            location_serializer = LocationSerializer(data=request.data.get('location'))
-            if location_serializer.is_valid():
-                location = location_serializer.save()
-                uuid = create_uuid()
-
-                master.master_info.location = location
-                master.master_info.uuid = uuid
-                master.master_info.save()
-                if request.data.get('phone_numbers_lit') is not None:
-                    save_phone_numbers(master.pk, request.data.get('phone_numbers_lit'))
-                try:
-                    master.master_info.specializations.add(
-                        *request.data.get('specializations_ids_list')
-                    )
-                except IntegrityError:
-                    ...
-                jwt = JWT({
-                    'user_id': master.pk
-                })
-                create_refresh_token(user_id=master.pk, token=jwt.refresh_token)
-                return Response(status=status.HTTP_201_CREATED, data=jwt.as_dict())
-            return Response(location_serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
-        else:
-            return Response(master_serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        except IntegrityError:
+            ...
+        jwt = JWT({
+            'user_id': master.pk
+        })
+        create_refresh_token(user_id=master.pk, token=jwt.refresh_token)
+        return Response(status=status.HTTP_200_OK, data=jwt.as_dict())
 
     def get_serializer(self, *args, **kwargs):
         serializer = super().get_serializer(*args, **kwargs)
