@@ -12,20 +12,55 @@ from users.settings import UsersStatuses
 class LocationsAPIView(GenericAPIView):
 
     @swagger_auto_schema(
-        responses={
-            status.HTTP_200_OK: openapi.Response(
-                description='User authenticated',
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'access_token': openapi.Schema(type=openapi.TYPE_STRING),
-                        'refresh_token': openapi.Schema(type=openapi.TYPE_STRING),
-                    },
+            manual_parameters=[
+                openapi.Parameter(
+                    'offset',
+                    openapi.IN_QUERY,
+                    description="Offset",
+                    type=openapi.TYPE_STRING
                 ),
-            ),
-            status.HTTP_304_NOT_MODIFIED: 'Already authorized',
-        }
+                openapi.Parameter(
+                    'cities_number',
+                    openapi.IN_QUERY,
+                    description="Number of cities",
+                    type=openapi.TYPE_INTEGER
+                )
+            ],
+            operation_description="Get a list of users"
     )
     def get(self, request):
         ...
+
+
+
+# class MyAPIView(APIView):
+#     serializer_class = MySerializer
+#
+#     @swagger_auto_schema(
+#         manual_parameters=[
+#             openapi.Parameter(
+#                 'name',
+#                 openapi.IN_QUERY,
+#                 description="Name of the user to filter by",
+#                 type=openapi.TYPE_STRING
+#             ),
+#             openapi.Parameter(
+#                 'age',
+#                 openapi.IN_QUERY,
+#                 description="Age of the user to filter by",
+#                 type=openapi.TYPE_INTEGER
+#             )
+#         ],
+#         operation_description="Get a list of users"
+#     )
+#     def get(self, request, *args, **kwargs):
+#         name = request.query_params.get('name')
+#         age = request.query_params.get('age')
+#         queryset = User.objects.all()
+#         if name:
+#             queryset = queryset.filter(name=name)
+#         if age:
+#             queryset = queryset.filter(age=age)
+#         serializer = MySerializer(queryset, many=True)
+#         return Response(serializer.data)
 

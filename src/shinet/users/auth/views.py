@@ -28,20 +28,22 @@ class UserAuthenticationAPIView(GenericAPIView):
             status.HTTP_304_NOT_MODIFIED: 'Already authorized',
             status.HTTP_403_FORBIDDEN: 'Forbidden (If user is blocked)',
             status.HTTP_422_UNPROCESSABLE_ENTITY: openapi.Response(
-                description='Validation error',
+                description="Validation error",
                 schema=openapi.Schema(
                     type=openapi.TYPE_OBJECT,
                     properties={
-                        'email': openapi.Schema(
-                            type=openapi.TYPE_STRING,
-                            description='Validation error message'
+                        "errors": openapi.Schema(
+                            type=openapi.TYPE_ARRAY,
+                            items=openapi.Schema(
+                                type=openapi.TYPE_OBJECT,
+                                properties={
+                                    "field": openapi.Schema(type="string"),
+                                    "message": openapi.Schema(type="string"),
+                                },
+                            ),
                         ),
-                        'password': openapi.Schema(
-                            type=openapi.TYPE_STRING,
-                            description='Validation error message'
-                        ),
-                    }
-                )
+                    },
+                ),
             )
         }
     )
