@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 
-def make_422_response(errors: Tuple[Tuple[str, str]]) -> Response:
+def make_422_response(errors: Dict[str, str]) -> Response:
     """
     Format errors for struct like this:
     {
@@ -21,10 +21,10 @@ def make_422_response(errors: Tuple[Tuple[str, str]]) -> Response:
     """
     response_errors = [
         {
-            'field': error[0],
-            'message': error[1]
+            'field': field,
+            'message': message
         }
-        for error in errors
+        for field, message in errors.items()
     ]
     return Response(
         data={

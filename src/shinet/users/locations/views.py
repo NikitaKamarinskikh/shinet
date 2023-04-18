@@ -3,29 +3,38 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
-from tokens.jwt import JWT
-from tokens.services import create_refresh_token, get_refresh_token_or_none
-from users.models import Users
-from users.settings import UsersStatuses
+from .serializers import LocationsQuerySerializer, LocationsListSerializer
+from .services import load_locations
 
 
 class LocationsAPIView(GenericAPIView):
 
     @swagger_auto_schema(
+        query_serializer=LocationsQuerySerializer(),
         responses={
-            status.HTTP_200_OK: openapi.Response(
-                description='User authenticated',
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'access_token': openapi.Schema(type=openapi.TYPE_STRING),
-                        'refresh_token': openapi.Schema(type=openapi.TYPE_STRING),
-                    },
-                ),
-            ),
-            status.HTTP_304_NOT_MODIFIED: 'Already authorized',
+            status.HTTP_200_OK: LocationsListSerializer(many=True)
         }
     )
     def get(self, request):
-        ...
+        serializer = LocationsQuerySerializer(data=request.query_params)
+        serializer.is_valid(raise_exception=True)
+        start_position = serializer.validated_data.get('start_position')
+        quantity = serializer.validated_data.get('quantity')
+        pattern = serializer.validated_data.get('pattern')
+
+        locations = load_locations()
+        if pattern is not None:
+            filtered_locations = []
+            for city in locations:
+                if pattern.lower() in city.name.lower():
+                    filtered_locations.append(city)
+        else:
+            filtered_locations = locations.copy()
+
+        filtered_locations = filtered_locations[start_position:start_position + quantity]
+
+        filtered_locations = [item.json for item in filtered_locations]
+        serializer = LocationsListSerializer(data=filtered_locations, many=True)
+        serializer.is_valid(raise_exception=True)
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
 

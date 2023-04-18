@@ -56,9 +56,7 @@ class ClientsRegistrationAPIView(GenericAPIView):
             create_refresh_token(user_id=client.id, token=jwt.refresh_token)
             return Response(status=status.HTTP_200_OK, data=jwt.as_dict())
         except IntegrityError:
-            return make_422_response(
-                (('email', 'Email already in use'),)
-            )
+            return make_422_response({'email': 'Email already in use'})
 
     def get_serializer(self, *args, **kwargs):
         serializer = super().get_serializer(*args, **kwargs)
@@ -97,7 +95,7 @@ class MastersRegistrationAPIView(GenericAPIView):
 
         email = request.data.get('email')
         if get_user_by_email_or_none(email) is not None:
-            return Response(status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+            return make_422_response({'email': 'Email already in use'})
         master = master_serializer.save()
         trial_subscription = get_trial_subscription()
         active_subscription = ActiveSubscriptions.objects.create(
