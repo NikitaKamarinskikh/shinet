@@ -119,7 +119,7 @@ class VerificationCodes(models.Model):
     email = models.EmailField(verbose_name='Email', unique=True)
     code = models.PositiveIntegerField(verbose_name='Код', unique=True)
     expiration_time = models.DateTimeField(verbose_name='Время истечения',
-                                           default=get_code_expiration_time(), editable=False)
+                                           default=get_code_expiration_time, editable=False)
 
     def __str__(self) -> str:
         return f'{self.email} {self.code}'
