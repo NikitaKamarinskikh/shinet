@@ -51,7 +51,6 @@ INSTALLED_APPS = [
     'services.apps.ServicesConfig',
     'tokens.apps.TokensConfig',
     'subscriptions.apps.SubscriptionsConfig',
-    'terms_of_use.apps.TermsOfUseConfig',
 ]
 
 REST_FRAMEWORK = {

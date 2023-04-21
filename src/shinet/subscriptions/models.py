@@ -3,7 +3,9 @@ from .settings import SubscriptionTypes
 
 
 class Subscriptions(models.Model):
-    price = models.PositiveIntegerField(verbose_name='Стоимость')
+    price_without_discount = models.PositiveIntegerField(verbose_name='Стоимость')
+    price_with_discount = models.PositiveIntegerField(verbose_name='Стоимость со скидкой')
+    discount_in_percent = models.PositiveIntegerField(verbose_name='Скидка в процентах')
     type = models.CharField(verbose_name='Тип', max_length=255,
                             choices=SubscriptionTypes.choices(), unique=True)
 
