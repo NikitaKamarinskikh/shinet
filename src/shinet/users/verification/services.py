@@ -7,6 +7,8 @@ from users.settings import UsersStatuses
 
 
 def get_user_by_email_or_none(email: str) -> Users | None:
+    """Check user with `email` exists in `Users` model
+    """
     return Users.objects.filter(email=email).first()
 
 
@@ -38,12 +40,20 @@ def save_verification_code(email: str, code: int) -> VerificationCodes:
     return VerificationCodes.objects.create(email=email, code=code)
 
 
-def get_verification_code_by_code_or_none(code: int) -> VerificationCodes:
+def get_verification_code_by_code_or_none(code: int) -> VerificationCodes | None:
     """Get instance of VerificationCodes if exists. Otherwise, returns None
     :param code: code from request
     :return: VerificationCodes or None
     """
     return VerificationCodes.objects.filter(code=code).first()
+
+
+def get_verification_code_by_email_or_none(email: str) -> VerificationCodes | None:
+    """Get instance of VerificationCodes if exists. Otherwise, returns None
+    :param email: email from request
+    :return: VerificationCodes or None
+    """
+    return VerificationCodes.objects.filter(email=email).first()
 
 
 def get_verification_code_by_code_and_email_or_none(email: str, code: int) -> VerificationCodes:
@@ -77,6 +87,19 @@ def create_unique_code() -> int:
         code = randint(100000, 999999)
         if code not in current_codes:
             return code
+
+
+def is_verification_code_exists(*, code: int = None, email: str = None) -> bool:
+    """Check verification code exists in database
+    If `code` is not None, check by code
+    If `email` is not None, check by email
+    If both are None raises `ValueError`
+    """
+    if code is None and email is None:
+        raise ValueError('You should specify `code` or `email` to call this function')
+    if code is not None:
+        return get_verification_code_by_code_or_none(code) is not None
+    return get_verification_code_by_email_or_none(email) is not None
 
 
 def is_user_blocked(user_id: int) -> bool:

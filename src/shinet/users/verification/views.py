@@ -1,6 +1,7 @@
 """
 This module contains APIView class for masters and clients registration
 """
+from smtplib import SMTPRecipientsRefused
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
 from rest_framework import status
@@ -26,13 +27,22 @@ class SendVerificationCodeAPIView(GenericAPIView):
         data = request.data
         serializer = IsEmailAvailableSerializers(data=data)
         serializer.is_valid(raise_exception=True)
-        email = request.data.get('email')
+        email = serializer.validated_data.get('email')
+        if verification_services.is_verification_code_exists(email=email):
+            return make_422_response({'email': 'Code already exists'})
         user = verification_services.get_user_by_email_or_none(email)
         if user is not None:
             return make_422_response({'email': 'Email already in use'})
+
         code = verification_services.create_unique_code()
+        try:
+            verification_services.send_verification_code(email, code)
+        except SMTPRecipientsRefused:
+            return make_422_response({'email': 'Cannot send email to this address'})
+        except:
+            return make_422_response({'email': 'Cannot send email to this address'})
+
         verification_services.save_verification_code(email, code)
-        verification_services.send_verification_code(email, code)
         return Response(status=status.HTTP_200_OK)
 
 
@@ -77,8 +87,13 @@ class UpdateVerificationCodeAPIView(GenericAPIView):
         email = request.data.get('email')
         code = verification_services.create_unique_code()
         try:
+            try:
+                verification_services.send_verification_code(email, code)
+            except SMTPRecipientsRefused:
+                return make_422_response({'email': 'Cannot send email to this address'})
+            except:
+                return make_422_response({'email': 'Cannot send email to this address'})
             verification_services.update_verification_code_by_email(email, code)
-            verification_services.send_verification_code(email, code)
             return Response(status=status.HTTP_200_OK)
         except VerificationCodes.DoesNotExist:
             return make_422_response({'code': 'Verification code does not exists'})

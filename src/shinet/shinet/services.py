@@ -53,3 +53,4 @@ HTTP_422_RESPONSE_SWAGGER_SCHEME = \
             }
         )
     )
+
