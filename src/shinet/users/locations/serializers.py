@@ -16,6 +16,8 @@ class LocationsQuerySerializer(serializers.Serializer):
 
 class LocationsListSerializer(serializers.Serializer):
     name = serializers.CharField()
+    type = serializers.CharField()
+    region = serializers.CharField()
     districts = serializers.ListField(
         child=serializers.CharField(),
         allow_empty=True,
