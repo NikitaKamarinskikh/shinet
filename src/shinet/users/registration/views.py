@@ -1,5 +1,5 @@
 """
-This module contains APIView class for masters and clients registraion
+This module contains APIView class for masters and clients registration
 """
 from django.db.utils import IntegrityError
 from drf_yasg import openapi
@@ -8,8 +8,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from datetime import datetime, timedelta, timezone
-from subscriptions.models import ActiveSubscriptions
-from subscriptions.services import get_trial_subscription
+from subscriptions.services import save_master_trial_subscription
 from tokens.jwt import JWT
 from tokens.services import create_refresh_token
 from .serializers import MasterRegistrationSerializer, ClientRegistrationSerializer
@@ -97,18 +96,9 @@ class MastersRegistrationAPIView(GenericAPIView):
         if get_user_by_email_or_none(email) is not None:
             return make_422_response({'email': 'Email already in use'})
         master = master_serializer.save()
-        trial_subscription = get_trial_subscription()
-        active_subscription = ActiveSubscriptions.objects.create(
-            subscription=trial_subscription,
-            start=datetime.now(timezone.utc),
-            end=datetime.now(timezone.utc),
-        )
-        master_info = MasterInfo.objects.create(
-            active_subscription=active_subscription
-        )
-        master.master_info = master_info
-
+        master_info = MasterInfo.objects.create()
         settings = UserSettings.objects.create()
+        master.master_info = master_info
         master.settings = settings
         master.save()
 
@@ -117,6 +107,8 @@ class MastersRegistrationAPIView(GenericAPIView):
         master.master_info.location = location
         master.master_info.uuid = uuid
         master.master_info.save()
+
+        save_master_trial_subscription(master.master_info.pk)
         if request.data.get('phone_numbers_lit') is not None:
             save_phone_numbers(master.pk, request.data.get('phone_numbers_lit'))
         try:

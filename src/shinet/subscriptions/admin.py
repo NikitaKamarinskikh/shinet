@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Subscriptions, ActiveSubscriptions
+from .models import Subscriptions, MastersSubscriptions
 
 
 @admin.register(Subscriptions)
@@ -10,9 +10,10 @@ class SubscriptionsAdmin(admin.ModelAdmin):
         model = Subscriptions
 
 
-@admin.register(ActiveSubscriptions)
-class ActiveSubscriptionsAdmin(admin.ModelAdmin):
+@admin.register(MastersSubscriptions)
+class MastersSubscriptionsAdmin(admin.ModelAdmin):
+    list_display = ('master', 'subscription', 'start_date', 'end_date', 'status')
 
     class Meta:
-        model = ActiveSubscriptions
+        model = MastersSubscriptions
 

@@ -1,9 +1,6 @@
 from datetime import datetime, timedelta, timezone
-import uuid
 from django.db import models
 from services.models import Specializations
-from subscriptions.models import ActiveSubscriptions
-from subscriptions.services import get_trial_subscription
 from .settings import UsersRoles, UsersStatuses
 
 
@@ -40,8 +37,6 @@ class MasterInfo(models.Model):
     location = models.OneToOneField('Locations', verbose_name='Адрес', on_delete=models.CASCADE, null=True)
     rating = models.PositiveIntegerField(verbose_name='Рейтинг', default=0)
     specializations = models.ManyToManyField(Specializations, blank=True, verbose_name='Специализации')
-    active_subscription = models.OneToOneField(ActiveSubscriptions, on_delete=models.CASCADE,
-                                               verbose_name='Активная подписка')
     uuid = models.PositiveIntegerField(verbose_name='UUID', default=0, unique=True)
 
     def __str__(self) -> str:
@@ -49,7 +44,6 @@ class MasterInfo(models.Model):
 
     def delete(self, *args, **kwargs):
         self.location.delete()
-        self.active_subscription.delete()
         super().delete(*args, **kwargs)
 
     class Meta:

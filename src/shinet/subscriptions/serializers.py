@@ -2,7 +2,7 @@
 This module contains serializers for `subscriptions` app
 """
 from rest_framework import serializers
-from .models import Subscriptions
+from .models import Subscriptions, MastersSubscriptions
 
 
 class SubscriptionSerializer(serializers.ModelSerializer):
@@ -11,5 +11,15 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class MastersSubscriptionSerializer(serializers.ModelSerializer):
+    subscription = SubscriptionSerializer()
+
+    class Meta:
+        model = MastersSubscriptions
+        fields = '__all__'
+
+
+class MastersSubscriptionHistoryQuerySerializer(serializers.Serializer):
+    master_id = serializers.IntegerField()
 
 

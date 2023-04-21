@@ -1,8 +1,10 @@
 from django.urls import path
-from .views import SubscriptionListAPIView
+from . import views
 
 
 urlpatterns = [
-    path('', SubscriptionListAPIView.as_view())
+    path('', views.SubscriptionListAPIView.as_view()),
+    path('history/', views.SubscriptionsHistoryAPIView.as_view()),
+    path('pay/', views.SubscriptionsPaymentAPIView.as_view()),
 ]
 
