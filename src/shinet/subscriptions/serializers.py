@@ -23,3 +23,7 @@ class MastersSubscriptionHistoryQuerySerializer(serializers.Serializer):
     master_id = serializers.IntegerField()
 
 
+class SubscriptionsPaymentSerializer(serializers.Serializer):
+    master_id = serializers.IntegerField()
+    subscription_id = serializers.IntegerField()
+

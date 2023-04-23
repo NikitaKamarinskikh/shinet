@@ -12,7 +12,7 @@ from subscriptions.services import save_master_trial_subscription
 from tokens.jwt import JWT
 from tokens.services import create_refresh_token
 from .serializers import MasterRegistrationSerializer, ClientRegistrationSerializer
-from shinet.services import HTTP_422_RESPONSE_SWAGGER_SCHEME,make_422_response
+from shinet.services import HTTP_422_RESPONSE_SWAGGER_SCHEME, make_422_response
 from users.settings import UsersRoles
 from .services import save_phone_numbers, create_uuid
 from ..locations.serializers import LocationSerializer
