@@ -13,6 +13,8 @@ class Subscriptions(models.Model):
     type = models.CharField(verbose_name='Тип', max_length=255,
                             choices=Types.choices, unique=True)
     image = models.ImageField(verbose_name='Изображение', null=True, blank=True)
+    description = models.TextField(verbose_name='Описание')
+    duration_in_days = models.PositiveIntegerField(verbose_name='Продолжительность в днях')
 
     def __str__(self):
         return self.type.__str__()

@@ -12,19 +12,19 @@ from .exceptions import InvalidAccessTokenException
 
 
 JWT_DEFAULT_HEADER = {"alg": "HS256", "typ": "JWT"}
-ACCESS_TOKEN_DEFAULT_LIFETIME_IN_SECONDS = 60 * 30
-REFRESH_TOKEN_DEFAULT_LIFETIME_IN_SECONDS = 60 * 60 * 24 * 30
+ACCESS_TOKEN_DEFAULT_LIFETIME_IN_MINUTES = 120
+REFRESH_TOKEN_DEFAULT_LIFETIME_IN_MINUTES = 43800  # 1 month
 
 
-def get_token_expiration_time_in_utc(token_lifetime_in_seconds: int) -> int:
+def get_token_expiration_time_in_utc(token_lifetime_in_minutes: int) -> int:
     """ Calculate token lifetime from current time in utc
-    :param token_lifetime_in_seconds: token lifetime in seconds
-    :type token_lifetime_in_seconds: int
+    :param token_lifetime_in_minutes: token lifetime in minutes
+    :type token_lifetime_in_minutes: int
     :return: token expiration time
     :rtype: int
     """
     utc_datetime = datetime.now(timezone.utc)
-    expiration_time = utc_datetime + timedelta(seconds=token_lifetime_in_seconds)
+    expiration_time = utc_datetime + timedelta(minutes=token_lifetime_in_minutes)
     return int(expiration_time.timestamp())
 
 
@@ -34,7 +34,7 @@ class JWT:
     If you pass a dict as parameter it will create a pair of access and refresh tokens,
         and it will use the dict as payload.
     If you pass a string as a parameter, it will try to decode the data and also create
-        a pair of access and refresh tokens with payload than was encoded in the string parameter
+        a pair of access and refresh tokens with payload that was encoded in the string parameter
 
     :param payload: payload
     :type payload: dict or str
@@ -56,12 +56,14 @@ class JWT:
                 raise InvalidAccessTokenException()
         self._header = JWT_DEFAULT_HEADER
         self._payload = payload
+        if self._payload.get('exp') is None:
+            self._payload['exp'] = get_token_expiration_time_in_utc(ACCESS_TOKEN_DEFAULT_LIFETIME_IN_MINUTES)
         self._signature = self._create_signature()
 
     def time_to_left(self) -> int:
         expiration_time = self._payload.get('exp')
         current_time = datetime.now(timezone.utc).timestamp()
-        return int(expiration_time - current_time)
+        return expiration_time - current_time
 
     def is_available(self) -> bool:
         """Check is access_token is still available
@@ -108,12 +110,10 @@ class JWT:
         header, payload, signature = data.split('.')
         decoded_header = self._base64_url_decode(header)
         decoded_payload = self._base64_url_decode(payload)
-        # self._header = literal_eval(decoded_header)
         self._payload = loads(decoded_payload)
         self._signature = signature
 
     def _create_access_token(self) -> str:
-        self._payload['exp'] = get_token_expiration_time_in_utc(ACCESS_TOKEN_DEFAULT_LIFETIME_IN_SECONDS)
         encoded_header, encoded_payload = self._encode_header_and_payload()
         return f'{encoded_header}.' \
                f'{encoded_payload}.' \
@@ -121,7 +121,7 @@ class JWT:
 
     def _create_refresh_token(self) -> str:
         random_string = self._generate_random_string()
-        exp_time = get_token_expiration_time_in_utc(REFRESH_TOKEN_DEFAULT_LIFETIME_IN_SECONDS)
+        exp_time = get_token_expiration_time_in_utc(REFRESH_TOKEN_DEFAULT_LIFETIME_IN_MINUTES)
         payload = {
             'is_valid': True,
             'exp': exp_time

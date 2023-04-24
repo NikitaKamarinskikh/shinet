@@ -7,7 +7,7 @@ class UserAuthenticationSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField()
 
-    def get_user(self):
+    def get_user(self) -> Users:
         email = self.validated_data.get('email')
         password = self.validated_data.get('password')
         password = make_sha256_hash(password)

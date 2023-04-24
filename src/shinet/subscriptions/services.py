@@ -30,7 +30,7 @@ def get_trial_subscription() -> Subscriptions:
         (type of the instance is SubscriptionTypes.TRIAL)
     :rtype: Subscription
     """
-    return get_subscription_by_type(Subscriptions.Status.TRIAL.value)
+    return get_subscription_by_type(Subscriptions.Types.TRIAL.value)
 
 
 def save_master_subscription(master_id: int, subscription_id: int,

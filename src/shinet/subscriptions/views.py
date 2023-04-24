@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timedelta, timezone
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -5,6 +6,8 @@ from rest_framework import status
 from rest_framework.generics import ListAPIView, GenericAPIView
 from rest_framework.response import Response
 from shinet.services import HTTP_422_RESPONSE_SWAGGER_SCHEME, make_422_response
+from tokens.decorators import check_access_token
+from tokens.jwt import JWT
 from users.masters.services import get_master_info_by_id_or_none
 from . import serializers
 from .models import Subscriptions, MastersSubscriptions
@@ -30,6 +33,7 @@ class SubscriptionListAPIView(ListAPIView):
             status.HTTP_403_FORBIDDEN: 'Access denied'
         }
     )
+    @check_access_token
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
@@ -51,14 +55,21 @@ class SubscriptionsHistoryAPIView(ListAPIView):
             status.HTTP_200_OK: serializers.MastersSubscriptionSerializer(many=True),
             status.HTTP_403_FORBIDDEN: 'Access denied'
         },
-        query_serializer=serializers.MastersSubscriptionHistoryQuerySerializer()
     )
+    @check_access_token
     def get(self, request, *args, **kwargs):
-        serializer = serializers.MastersSubscriptionHistoryQuerySerializer(data=request.query_params)
-        serializer.is_valid(raise_exception=True)
-        master_id = serializer.validated_data.get('master_id')
-        self.queryset = services.get_master_subscriptions(master_id)
-        return super().get(request, *args, **kwargs)
+        auth_token = request.META.get('HTTP_AUTHORIZATION')
+        try:
+            _, access_token = auth_token.split()
+            jwt = JWT(access_token)
+            master_id = jwt.payload.get('master_id')
+            if master_id is None:
+                return Response(status=status.HTTP_403_FORBIDDEN)
+            self.queryset = services.get_master_subscriptions(master_id)
+            return super().get(request, *args, **kwargs)
+        except Exception as e:
+            logging.error(e)
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
 
 class SubscriptionsPaymentAPIView(GenericAPIView):
@@ -79,10 +90,20 @@ class SubscriptionsPaymentAPIView(GenericAPIView):
             status.HTTP_403_FORBIDDEN: 'Access denied'
         },
     )
+    @check_access_token
     def post(self, request):
         serializer = serializers.SubscriptionsPaymentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        master_id = serializer.validated_data.get('master_id')
+        auth_token = request.META.get('HTTP_AUTHORIZATION')
+        try:
+            _, access_token = auth_token.split()
+            jwt = JWT(access_token)
+            master_id = jwt.payload.get('master_id')
+            if master_id is None:
+                return Response(status=status.HTTP_403_FORBIDDEN)
+        except Exception as e:
+            logging.exception(e)
+            return Response(status=status.HTTP_403_FORBIDDEN)
         subscription_id = serializer.validated_data.get('subscription_id')
 
         subscription = services.get_subscription_by_id_or_none(subscription_id)

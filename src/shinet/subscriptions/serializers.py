@@ -16,7 +16,7 @@ class MastersSubscriptionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MastersSubscriptions
-        fields = '__all__'
+        fields = ('subscription', 'start_date', 'end_date', 'status', 'paying_price')
 
 
 class MastersSubscriptionHistoryQuerySerializer(serializers.Serializer):
@@ -24,6 +24,5 @@ class MastersSubscriptionHistoryQuerySerializer(serializers.Serializer):
 
 
 class SubscriptionsPaymentSerializer(serializers.Serializer):
-    master_id = serializers.IntegerField()
     subscription_id = serializers.IntegerField()
 

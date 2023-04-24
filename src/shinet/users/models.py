@@ -86,7 +86,7 @@ class UsersPhonesNumbers(models.Model):
 
 
 class UnregisteredClients(models.Model):
-    master = models.ForeignKey(MasterInfo, verbose_name='Мастер', on_delete=models.CASCADE)
+    master = models.ForeignKey(MasterInfo, verbose_name='Мастер', on_delete=models.PROTECT)
     first_name = models.CharField(verbose_name='Имя', max_length=255)
     last_name = models.CharField(verbose_name='Фамилия', max_length=255)
 

@@ -1,6 +1,8 @@
 """
 This module contains APIView class for masters and clients registration
 """
+import logging
+
 from django.db.utils import IntegrityError
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -68,7 +70,7 @@ class MastersRegistrationAPIView(GenericAPIView):
 
     @swagger_auto_schema(
         responses={
-            status.HTTP_201_CREATED: openapi.Response(
+            status.HTTP_200_OK: openapi.Response(
                 description='Client created',
                 schema=openapi.Schema(
                     type=openapi.TYPE_OBJECT,
@@ -115,10 +117,11 @@ class MastersRegistrationAPIView(GenericAPIView):
             master.master_info.specializations.add(
                 *request.data.get('specializations_ids_list')
             )
-        except IntegrityError:
-            ...
+        except Exception as e:
+            logging.error(e)
         jwt = JWT({
-            'user_id': master.pk
+            'user_id': master.pk,
+            'master_id': master.master_info.pk
         })
         create_refresh_token(user_id=master.pk, token=jwt.refresh_token)
         return Response(status=status.HTTP_200_OK, data=jwt.as_dict())

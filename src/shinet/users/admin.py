@@ -1,17 +1,16 @@
 from django.contrib import admin
-from .models import Users, MasterInfo, UserSettings,\
-    UsersPhonesNumbers, UnregisteredClients, VerificationCodes, Locations
+from . import models
 
 
-@admin.register(VerificationCodes)
+@admin.register(models.VerificationCodes)
 class VerificationCodesAdmin(admin.ModelAdmin):
     list_display = ('email', 'code', 'expiration_time')
 
     class Meta:
-        model = VerificationCodes
+        model = models.VerificationCodes
 
 
-@admin.register(Users)
+@admin.register(models.Users)
 class UsersAdmin(admin.ModelAdmin):
     list_display = ('pk', 'first_name', 'last_name', 'role', 'email', 'status', 'created_at')
     list_filter = ('role', )
@@ -19,43 +18,43 @@ class UsersAdmin(admin.ModelAdmin):
     list_display_links = ('first_name', 'last_name', 'email')
 
     class Meta:
-        model = Users
+        model = models.Users
 
 
-@admin.register(MasterInfo)
+@admin.register(models.MasterInfo)
 class MasterInfoAdmin(admin.ModelAdmin):
     list_display = ('pk', 'uuid', 'rating')
     list_display_links = ('pk', 'uuid')
 
     class Meta:
-        model = MasterInfo
+        model = models.MasterInfo
 
 
-@admin.register(Locations)
+@admin.register(models.Locations)
 class LocationsAdmin(admin.ModelAdmin):
     list_display = ('city', 'district', 'street', 'house', 'office', 'floor')
 
     class Meta:
-        model = Locations
+        model = models.Locations
 
 
-@admin.register(UserSettings)
+@admin.register(models.UserSettings)
 class UsersSettingsAdmin(admin.ModelAdmin):
 
     class Meta:
-        model = UserSettings
+        model = models.UserSettings
 
 
-@admin.register(UsersPhonesNumbers)
+@admin.register(models.UsersPhonesNumbers)
 class UsersPhonesNumbersAdmin(admin.ModelAdmin):
 
     class Meta:
-        model = UsersPhonesNumbers
+        model = models.UsersPhonesNumbers
 
 
-@admin.register(UnregisteredClients)
+@admin.register(models.UnregisteredClients)
 class UnregisteredClientsAdmin(admin.ModelAdmin):
     list_display = ('first_name', 'last_name')
 
     class Meta:
-        model = UnregisteredClients
+        model = models.UnregisteredClients
