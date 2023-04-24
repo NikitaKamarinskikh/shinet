@@ -86,9 +86,13 @@ class UsersPhonesNumbers(models.Model):
 
 
 class UnregisteredClients(models.Model):
+    """
+    This model contains clients that was created by masters
+    """
     master = models.ForeignKey(MasterInfo, verbose_name='Мастер', on_delete=models.PROTECT)
     first_name = models.CharField(verbose_name='Имя', max_length=255)
     last_name = models.CharField(verbose_name='Фамилия', max_length=255)
+    extra_info = models.TextField(verbose_name='Дополнительная информация', null=True, blank=True)
 
     def __str__(self) -> str:
         return f'{self.first_name} {self.last_name}'
