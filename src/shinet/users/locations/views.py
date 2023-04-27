@@ -13,7 +13,8 @@ class LocationsAPIView(GenericAPIView):
         query_serializer=LocationsQuerySerializer(),
         responses={
             status.HTTP_200_OK: LocationsListSerializer(many=True)
-        }
+        },
+        operation_description='Location types: `city`, `village (село, аул и т.п)`, `countryside (деревня)`'
     )
     def get(self, request):
         serializer = LocationsQuerySerializer(data=request.query_params)

@@ -1,8 +1,12 @@
 from django.urls import path
-from .views import SpecializationsAPIView
+from . import views
 
 
 urlpatterns = [
-    path('specializations/', SpecializationsAPIView.as_view())
+    path('', views.MastersServicesListAPIView.as_view()),
+    path('add/', views.AddMasterServiceAPIView.as_view()),
+    path('edit/', views.EditMasterServiceAPIView.as_view()),
+    path('delete/<int:service_id>/', views.DeleteMasterServiceAPIView.as_view()),
+    path('specializations/', views.SpecializationsAPIView.as_view())
 ]
 

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Specializations, Services, ServiceImages
+from .models import Specializations, Services
 
 
 @admin.register(Specializations)
@@ -17,13 +17,6 @@ class ServicesAdmin(admin.ModelAdmin):
     class Meta:
         model = Services
 
-
-@admin.register(ServiceImages)
-class ServiceImagesAdmin(admin.ModelAdmin):
-    list_display = ('service', )
-
-    class Meta:
-        model = ServiceImages
 
 
 
