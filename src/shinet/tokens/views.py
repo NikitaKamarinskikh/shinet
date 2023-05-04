@@ -34,10 +34,9 @@ class UpdateAccessTokenAPIView(GenericAPIView):
             refresh_token = data.get('refresh_token')
             try:
                 access_jwt = JWT(access_token)
-                user_id = access_jwt.payload.get('user_id')
                 refresh_jwt = JWT(refresh_token)
                 if refresh_jwt.is_available():
-                    jwt = JWT({'user_id': user_id})
+                    jwt = JWT(access_jwt.payload)
                     return Response(status=status.HTTP_200_OK, data={
                         'access_token': jwt.access_token
                     })

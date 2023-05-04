@@ -51,6 +51,8 @@ INSTALLED_APPS = [
     'services.apps.ServicesConfig',
     'tokens.apps.TokensConfig',
     'subscriptions.apps.SubscriptionsConfig',
+    'slots.apps.SlotsConfig',
+    'bookings.apps.BookingsConfig',
 ]
 
 REST_FRAMEWORK = {
