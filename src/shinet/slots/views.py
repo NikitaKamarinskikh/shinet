@@ -5,12 +5,11 @@ from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from tokens.decorators import check_access_token
-from tokens.exceptions import InvalidAccessTokenException
 from tokens.services import get_payload_from_token
 from shinet.services import HTTP_422_RESPONSE_SWAGGER_SCHEME, make_422_response
 from . import serializers
 from . import services
-from .date_range import DateRange
+from .date_range import DateRange, InvalidDateRange
 
 
 class SlotsListAPIView(GenericAPIView):
@@ -36,21 +35,17 @@ class SlotsListAPIView(GenericAPIView):
     )
     @check_access_token
     def get(self, request):
-        try:
-            payload = get_payload_from_token(request)
-            master_id = payload.get('master_id')
-            if master_id is None:
-                return Response(status=status.HTTP_403_FORBIDDEN)
-            query_serializer = serializers.SlotsListQuerySerializer(data=request.query_params)
-            query_serializer.is_valid(raise_exception=True)
-            start_date = query_serializer.validated_data.get('start_date')
-            end_date = query_serializer.validated_data.get('end_date')
-            print(master_id, start_date, end_date)
-            slots = services.get_slots_by_date_range_and_master_id(master_id, start_date, end_date)
-            serializer = serializers.SlotSerializer(slots, many=True)
-            return Response(status=status.HTTP_200_OK, data=serializer.data)
-        except InvalidAccessTokenException:
+        payload = get_payload_from_token(request)
+        master_id = payload.get('master_id')
+        if master_id is None:
             return Response(status=status.HTTP_403_FORBIDDEN)
+        query_serializer = serializers.SlotsListQuerySerializer(data=request.query_params)
+        query_serializer.is_valid(raise_exception=True)
+        start_date = query_serializer.validated_data.get('start_date')
+        end_date = query_serializer.validated_data.get('end_date')
+        slots = services.get_slots_by_date_range_and_master_id(master_id, start_date, end_date)
+        serializer = serializers.SlotSerializer(slots, many=True)
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
 
 
 class CreateSlotAPIView(GenericAPIView):
@@ -76,29 +71,39 @@ class CreateSlotAPIView(GenericAPIView):
     )
     @check_access_token
     def post(self, request):
-        try:
-            payload = get_payload_from_token(request)
-            master_id = payload.get('master_id')
-            if master_id is None:
-                return Response(status=status.HTTP_403_FORBIDDEN)
-            serializer = serializers.CreateSlotSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            start_datetime = serializer.validated_data.get('start_datetime')
-            end_datetime = serializer.validated_data.get('end_datetime')
-
-            date_range = DateRange(start_datetime, end_datetime)
-
-            slots = services.get_slots_by_master_id(master_id)
-
-            for slot in slots:
-                slot_date_range = DateRange(slot.start_datetime, slot.end_datetime)
-                if date_range.has_intersection(slot_date_range, include_start=False, include_end=False) or\
-                        date_range.is_equal(slot_date_range):
-                    return make_422_response({'start_date': 'Date range intersection'})
-
-            slot = services.create_slot(master_id, start_datetime, end_datetime)
-            slot_serializer = serializers.SlotSerializer(slot)
-            return Response(status=status.HTTP_200_OK, data=slot_serializer.data)
-        except InvalidAccessTokenException:
+        payload = get_payload_from_token(request)
+        master_id = payload.get('master_id')
+        if master_id is None:
             return Response(status=status.HTTP_403_FORBIDDEN)
+        serializer = serializers.CreateSlotSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        start_datetime = serializer.validated_data.get('start_datetime')
+        end_datetime = serializer.validated_data.get('end_datetime')
 
+        try:
+            date_range = DateRange(start_datetime, end_datetime)
+        except InvalidDateRange:
+            return make_422_response({'start_date': 'Start date must be earlier than end date'})
+        if date_range.duration_in_minutes < services.MINIMAL_SLOT_TIME_IN_MINUTES:
+            return make_422_response({'end_date': f'Minimal slot time is {services.MINIMAL_SLOT_TIME_IN_MINUTES} minutes'})
+        if date_range.duration_in_hours > services.MAXIMAL_SLOT_TIME_IN_HOURS:
+            return make_422_response({'end_date': f'Maximal slot time is {services.MAXIMAL_SLOT_TIME_IN_HOURS} hours'})
+
+        start_time_minutes_str = str(date_range.start_time).split(':')[1]
+        end_time_minutes_str = str(date_range.end_time).split(':')[1]
+        if start_time_minutes_str not in services.AVAILABLE_MINUTES:
+            return make_422_response({'start_date': 'Invalid start date minutes'})
+        if end_time_minutes_str not in services.AVAILABLE_MINUTES:
+            return make_422_response({'end_date': 'Invalid end date minutes'})
+
+        slots = services.get_slots_by_master_id(master_id)
+
+        for slot in slots:
+            slot_date_range = DateRange(slot.start_datetime, slot.end_datetime)
+            if date_range.has_intersection(slot_date_range, include_start=False, include_end=False) or\
+                    date_range.is_equal(slot_date_range):
+                return make_422_response({'start_date': 'Date range intersection'})
+
+        slot = services.create_slot(master_id, start_datetime, end_datetime)
+        slot_serializer = serializers.SlotSerializer(slot)
+        return Response(status=status.HTTP_200_OK, data=slot_serializer.data)

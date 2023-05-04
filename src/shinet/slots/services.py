@@ -7,6 +7,11 @@ from datetime import datetime
 from .models import Slots
 
 
+MINIMAL_SLOT_TIME_IN_MINUTES = 30
+MAXIMAL_SLOT_TIME_IN_HOURS = 16
+AVAILABLE_MINUTES = ('00', '15', '30')
+
+
 def get_slots_by_date_range_and_master_id(master_id: int,
                                           start_date: datetime,
                                           end_date: datetime) -> List[Slots]:

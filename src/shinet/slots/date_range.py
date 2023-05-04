@@ -2,7 +2,7 @@
 This module contains `DateRange` class
 """
 from __future__ import annotations
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time, date
 
 
 class InvalidDateRange(Exception):
@@ -31,28 +31,36 @@ class DateRange:
         self._end_time = self._end_datetime.time()
 
     @property
-    def start_datetime(self):
+    def start_datetime(self) -> datetime:
         return self._start_datetime
 
     @property
-    def end_datetime(self):
+    def end_datetime(self) -> datetime:
         return self._end_datetime
 
     @property
-    def start_date(self):
+    def start_date(self) -> date:
         return self._start_date
 
     @property
-    def end_date(self):
+    def end_date(self) -> date:
         return self._end_date
 
     @property
-    def start_time(self):
+    def start_time(self) -> time:
         return self._start_time
 
     @property
-    def end_time(self):
+    def end_time(self) -> time:
         return self._end_time
+
+    @property
+    def duration_in_minutes(self) -> int:
+        return (self._end_datetime - self._start_datetime).seconds // 60
+
+    @property
+    def duration_in_hours(self) -> int:
+        return (self._end_datetime - self._start_datetime).seconds // 3600
 
     def is_equal(self, other: DateRange) -> bool:
         """
