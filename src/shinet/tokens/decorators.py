@@ -1,3 +1,4 @@
+import logging
 from typing import Callable
 from rest_framework.response import Response
 from rest_framework import status
@@ -21,7 +22,8 @@ def check_access_token(func: Callable):
             if jwt.is_available():
                 return func(*args, **kwargs)
             return Response(status=status.HTTP_403_FORBIDDEN)
-        except (InvalidAccessTokenException, ValueError, AttributeError):
+        except (InvalidAccessTokenException, ValueError, AttributeError) as e:
+            logging.exception(e)
             return Response(status=status.HTTP_403_FORBIDDEN)
 
     return wrapper

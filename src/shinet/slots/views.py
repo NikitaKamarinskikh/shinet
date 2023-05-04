@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timezone
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
@@ -88,7 +89,10 @@ class CreateSlotAPIView(GenericAPIView):
             return make_422_response({'end_date': f'Minimal slot time is {services.MINIMAL_SLOT_TIME_IN_MINUTES} minutes'})
         if date_range.duration_in_hours > services.MAXIMAL_SLOT_TIME_IN_HOURS:
             return make_422_response({'end_date': f'Maximal slot time is {services.MAXIMAL_SLOT_TIME_IN_HOURS} hours'})
-
+        if start_datetime < datetime.now(timezone.utc):
+            return make_422_response({'start_date': 'Start date is too old'})
+        if end_datetime < datetime.now(timezone.utc):
+            return make_422_response({'start_date': 'End date is too old'})
         start_time_minutes_str = str(date_range.start_time).split(':')[1]
         end_time_minutes_str = str(date_range.end_time).split(':')[1]
         if start_time_minutes_str not in services.AVAILABLE_MINUTES:
@@ -107,3 +111,50 @@ class CreateSlotAPIView(GenericAPIView):
         slot = services.create_slot(master_id, start_datetime, end_datetime)
         slot_serializer = serializers.SlotSerializer(slot)
         return Response(status=status.HTTP_200_OK, data=slot_serializer.data)
+
+
+class BookSlotAPIView(GenericAPIView):
+    serializer_class = serializers.BookSlotSerializer
+
+    @swagger_auto_schema(
+        request_headers={
+            'Authorization': 'Bearer <token>'
+        },
+        manual_parameters=[
+            openapi.Parameter(
+                'Authorization', openapi.IN_HEADER, 'Access token',
+                type=openapi.TYPE_STRING
+            ),
+        ],
+        responses={
+            status.HTTP_200_OK: serializers.BookingSerializer(),
+            status.HTTP_403_FORBIDDEN: 'Access denied',
+            status.HTTP_422_UNPROCESSABLE_ENTITY: HTTP_422_RESPONSE_SWAGGER_SCHEME,
+        },
+        operation_description=''
+    )
+    @check_access_token
+    def post(self, request):
+        serializer = serializers.BookSlotSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        slot_id = serializer.validated_data.get('slot_id')
+        service_id = serializer.validated_data.get('service_id')
+        client_id = serializer.validated_data.get('client_id')
+
+        start_datetime = serializer.validated_data.get('start_datetime')
+        end_datetime = serializer.validated_data.get('end_datetime')
+        new_booking_date_range = DateRange(start_datetime, end_datetime)
+
+        current_bookings = services.get_bookings_by_slot_id(slot_id)
+        for booking in current_bookings:
+            booking_range = DateRange(booking.start_datetime, booking.end_datetime)
+            if new_booking_date_range.has_intersection(booking_range, include_start=False, include_end=False) or\
+                    new_booking_date_range.is_equal(booking_range):
+                return make_422_response({'start_date': 'Date range intersection'})
+
+        booking = services.save_booking(slot_id, service_id, client_id, start_datetime, end_datetime)
+        booking_serializer = serializers.BookingSerializer(booking)
+        return Response(status=status.HTTP_200_OK, data=booking_serializer.data)
+
+
+

@@ -8,3 +8,12 @@ class SlotsAdmin(admin.ModelAdmin):
 
     class Meta:
         model = models.Slots
+
+
+@admin.register(models.Bookings)
+class BookingsAdmin(admin.ModelAdmin):
+    list_display = ('slot', 'service', 'client', 'start_datetime', 'end_datetime')
+
+    class Meta:
+        model = models.Bookings
+
