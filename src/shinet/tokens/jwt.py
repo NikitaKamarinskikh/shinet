@@ -12,7 +12,7 @@ from .exceptions import InvalidAccessTokenException
 
 
 JWT_DEFAULT_HEADER = {"alg": "HS256", "typ": "JWT"}
-ACCESS_TOKEN_DEFAULT_LIFETIME_IN_MINUTES = 43800
+ACCESS_TOKEN_DEFAULT_LIFETIME_IN_MINUTES = 120
 REFRESH_TOKEN_DEFAULT_LIFETIME_IN_MINUTES = 43800  # 1 month
 
 
@@ -40,7 +40,7 @@ class JWT:
     :type payload: dict or str
     """
 
-    def __init__(self, payload: dict | str):
+    def __init__(self, payload: dict | str, update_time=False):
         if not isinstance(payload, dict) and not isinstance(payload, str):
             raise TypeError()
         self._access_token = None
@@ -56,7 +56,7 @@ class JWT:
                 raise InvalidAccessTokenException()
         self._header = JWT_DEFAULT_HEADER
         self._payload = payload
-        if self._payload.get('exp') is None:
+        if self._payload.get('exp') is None or update_time:
             self._payload['exp'] = get_token_expiration_time_in_utc(ACCESS_TOKEN_DEFAULT_LIFETIME_IN_MINUTES)
         self._signature = self._create_signature()
 
