@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime, timezone
+from django.utils import timezone
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
@@ -81,23 +82,28 @@ class CreateSlotAPIView(GenericAPIView):
         start_datetime = serializer.validated_data.get('start_datetime')
         end_datetime = serializer.validated_data.get('end_datetime')
 
+        # now = timezone.now()
+
         try:
             date_range = DateRange(start_datetime, end_datetime)
         except InvalidDateRange:
             return make_422_response({'start_date': 'Start date must be earlier than end date'})
+        if start_datetime == end_datetime:
+            return make_422_response({'end_date': 'End date must not be same as start_date'})
         if date_range.duration_in_minutes < services.MINIMAL_SLOT_TIME_IN_MINUTES:
             return make_422_response({'end_date': f'Minimal slot time is {services.MINIMAL_SLOT_TIME_IN_MINUTES} minutes'})
         if date_range.duration_in_hours > services.MAXIMAL_SLOT_TIME_IN_HOURS:
             return make_422_response({'end_date': f'Maximal slot time is {services.MAXIMAL_SLOT_TIME_IN_HOURS} hours'})
-        if start_datetime < datetime.now(timezone.utc):
-            return make_422_response({'start_date': 'Start date is too old'})
-        if end_datetime < datetime.now(timezone.utc):
-            return make_422_response({'start_date': 'End date is too old'})
+        # if start_datetime < now:
+        #     return make_422_response({'start_date': 'Start date is too old'})
+        # if end_datetime < now:
+        #     return make_422_response({'start_date': 'End date is too old'})
+
         start_time_minutes_str = str(date_range.start_time).split(':')[1]
         end_time_minutes_str = str(date_range.end_time).split(':')[1]
-        if start_time_minutes_str not in services.AVAILABLE_MINUTES:
+        if int(start_time_minutes_str) % 5 != 0:
             return make_422_response({'start_date': 'Invalid start date minutes'})
-        if end_time_minutes_str not in services.AVAILABLE_MINUTES:
+        if int(end_time_minutes_str) % 5 != 0:
             return make_422_response({'end_date': 'Invalid end date minutes'})
 
         slots = services.get_slots_by_master_id(master_id)
