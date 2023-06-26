@@ -24,6 +24,7 @@ class UserAuthenticationAPIView(GenericAPIView):
                     properties={
                         'access_token': openapi.Schema(type=openapi.TYPE_STRING),
                         'refresh_token': openapi.Schema(type=openapi.TYPE_STRING),
+                        'role': openapi.Schema(type=openapi.TYPE_STRING),
                     },
                 ),
             ),
@@ -40,13 +41,18 @@ class UserAuthenticationAPIView(GenericAPIView):
             if user.status == UsersStatuses.BLOCKED.value:
                 return Response(status=status.HTTP_403_FORBIDDEN)
             jwt_payload = {
-                'user_id': user.pk
+                'user_id': user.pk,
             }
             if user.master_info:
                 jwt_payload['master_id'] = user.master_info.pk
             jwt = JWT(jwt_payload)
             create_or_update_refresh_token(user.pk, jwt.refresh_token)
-            return Response(status=status.HTTP_200_OK, data=jwt.as_dict())
+            response_data = {
+                'access_token': jwt.access_token,
+                'refresh_token': jwt.refresh_token,
+                'role': user.role
+            }
+            return Response(status=status.HTTP_200_OK, data=response_data)
         except Users.DoesNotExist:
             return make_422_response({'password': 'Invalid password'})
 
