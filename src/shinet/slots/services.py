@@ -11,13 +11,26 @@ MAXIMAL_SLOT_TIME_IN_HOURS = 16
 AVAILABLE_MINUTES = ('00', '15', '30')
 
 
-def get_slots_by_date_range_and_master_id(master_id: int,
+def get_slots_with_bookings_by_date_range_and_master_id(master_id: int,
                                           start_date: datetime,
                                           end_date: datetime) -> List[Slots]:
     """
 
     """
     return list(Slots.objects.prefetch_related('bookings').filter(
+        master_id=master_id,
+        start_datetime__date__gte=start_date,
+        end_datetime__date__lte=end_date
+    ))
+
+
+def get_slots_by_date_range_and_master_id(master_id: int,
+                                          start_date: datetime,
+                                          end_date: datetime) -> List[Slots]:
+    """
+
+    """
+    return list(Slots.objects.filter(
         master_id=master_id,
         start_datetime__date__gte=start_date,
         end_datetime__date__lte=end_date

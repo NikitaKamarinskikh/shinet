@@ -15,7 +15,7 @@ class UpdateAccessTokenAPIView(GenericAPIView):
     @swagger_auto_schema(
         responses={
             status.HTTP_200_OK: openapi.Response(
-                description='Token updated successfully',
+                description='Update access token',
                 schema=openapi.Schema(
                     type=openapi.TYPE_OBJECT,
                     properties={

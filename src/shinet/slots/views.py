@@ -1,4 +1,5 @@
 import logging
+
 from datetime import datetime, timezone
 from django.utils import timezone
 from drf_yasg import openapi
@@ -6,6 +7,7 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
+
 from tokens.decorators import check_access_token
 from tokens.services import get_payload_from_token
 from shinet.services import HTTP_422_RESPONSE_SWAGGER_SCHEME, make_422_response
@@ -45,7 +47,7 @@ class SlotsListAPIView(GenericAPIView):
         query_serializer.is_valid(raise_exception=True)
         start_date = query_serializer.validated_data.get('start_date')
         end_date = query_serializer.validated_data.get('end_date')
-        slots = services.get_slots_by_date_range_and_master_id(master_id, start_date, end_date)
+        slots = services.get_slots_with_bookings_by_date_range_and_master_id(master_id, start_date, end_date)
         serializer = serializers.SlotSerializer(slots, many=True)
         return Response(status=status.HTTP_200_OK, data=serializer.data)
 
@@ -81,8 +83,6 @@ class CreateSlotAPIView(GenericAPIView):
         serializer.is_valid(raise_exception=True)
         start_datetime = serializer.validated_data.get('start_datetime')
         end_datetime = serializer.validated_data.get('end_datetime')
-
-        # now = timezone.now()
 
         try:
             date_range = DateRange(start_datetime, end_datetime)

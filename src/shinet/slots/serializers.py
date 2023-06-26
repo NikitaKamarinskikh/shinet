@@ -16,6 +16,14 @@ class SlotSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class SocketSlotSerializer(serializers.ModelSerializer):
+    bookings_list = BookingSerializer(many=True)
+
+    class Meta:
+        model = models.Slots
+        fields = '__all__'
+
+
 class SlotsListQuerySerializer(serializers.Serializer):
     start_date = serializers.DateField()
     end_date = serializers.DateField()

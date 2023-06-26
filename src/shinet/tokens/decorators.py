@@ -1,7 +1,9 @@
 import logging
 from typing import Callable
+
 from rest_framework.response import Response
 from rest_framework import status
+
 from .jwt import JWT
 from .exceptions import InvalidAccessTokenException
 
