@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from tokens.decorators import check_access_token
 from tokens.services import get_payload_from_token
 from shinet.services import HTTP_422_RESPONSE_SWAGGER_SCHEME, make_422_response
+from users.services import get_user_phone_numbers
 from . import serializers
 from . import services
 from .date_range import DateRange, InvalidDateRange
@@ -163,4 +164,34 @@ class BookSlotAPIView(GenericAPIView):
         return Response(status=status.HTTP_200_OK, data=booking_serializer.data)
 
 
+class BookingDetailAPIView(GenericAPIView):
+    serializer_class = serializers.BookingDetailSerializer
+
+    @swagger_auto_schema(
+        request_headers={
+            'Authorization': 'Bearer <token>'
+        },
+        manual_parameters=[
+            openapi.Parameter(
+                'Authorization', openapi.IN_HEADER, 'Access token',
+                type=openapi.TYPE_STRING
+            ),
+        ],
+        responses={
+            status.HTTP_200_OK: serializers.BookingDetailSerializer(),
+            status.HTTP_403_FORBIDDEN: 'Access denied',
+            status.HTTP_404_NOT_FOUND: 'Booking not found',
+            status.HTTP_422_UNPROCESSABLE_ENTITY: HTTP_422_RESPONSE_SWAGGER_SCHEME,
+        },
+        operation_description=''
+    )
+    # @check_access_token
+    def get(self, request, booking_id: int):
+        booking = services.get_booking_by_id_or_none(booking_id)
+        if booking is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        client_phone_numbers = get_user_phone_numbers(booking.client.pk)
+        setattr(booking.client, 'phone_numbers', client_phone_numbers)
+        serializer = serializers.BookingDetailSerializer(booking)
+        return Response(status=status.HTTP_200_OK, data=serializer.data)
 

@@ -1,4 +1,7 @@
 from rest_framework import serializers
+
+from services.serializers import MasterServiceSerializer
+from users.clients.serializers import BaseClientSerializer
 from . import models
 
 
@@ -41,3 +44,13 @@ class BookSlotSerializer(serializers.Serializer):
     client_id = serializers.IntegerField()
     start_datetime = serializers.DateTimeField()
     end_datetime = serializers.DateTimeField()
+
+
+class BookingDetailSerializer(serializers.ModelSerializer):
+    service = MasterServiceSerializer()
+    client = BaseClientSerializer()
+
+    class Meta:
+        model = models.Bookings
+        fields = '__all__'
+

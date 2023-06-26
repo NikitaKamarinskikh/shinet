@@ -23,6 +23,7 @@ class Bookings(models.Model):
     client = models.ForeignKey(Users, verbose_name='Client', on_delete=models.CASCADE)
     start_datetime = models.DateTimeField(verbose_name='Start datetime')
     end_datetime = models.DateTimeField(verbose_name='End datetime')
+    client_comment = models.TextField(verbose_name='Client comment', null=True, blank=True)
 
     def __str__(self):
         return f'{self.pk} {self.start_datetime} {self.end_datetime}'

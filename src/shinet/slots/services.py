@@ -76,4 +76,8 @@ def save_booking(slot_id: int, service_id: int, client_id: int,
     )
 
 
+def get_booking_by_id_or_none(booking_id: int) -> Bookings | None:
+    return Bookings.objects.select_related('service', 'client').filter(pk=booking_id).first()
+
+
 
