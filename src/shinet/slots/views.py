@@ -1,6 +1,6 @@
 import logging
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from django.utils import timezone
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -85,34 +85,38 @@ class CreateSlotAPIView(GenericAPIView):
         start_datetime = serializer.validated_data.get('start_datetime')
         end_datetime = serializer.validated_data.get('end_datetime')
 
+        now = datetime.now()
         try:
             date_range = DateRange(start_datetime, end_datetime)
         except InvalidDateRange:
-            return make_422_response({'start_date': 'Start date must be earlier than end date'})
+            return make_422_response({'start_datetime': 'Start date must be earlier than end date'})
         if start_datetime == end_datetime:
-            return make_422_response({'end_date': 'End date must not be same as start_date'})
+            return make_422_response({'end_datetime': 'End date must not be same as start_date'})
         if date_range.duration_in_minutes < services.MINIMAL_SLOT_TIME_IN_MINUTES:
-            return make_422_response({'end_date': f'Minimal slot time is {services.MINIMAL_SLOT_TIME_IN_MINUTES} minutes'})
+            return make_422_response({'end_datetime': f'Minimal slot time is {services.MINIMAL_SLOT_TIME_IN_MINUTES} minutes'})
         if date_range.duration_in_hours > services.MAXIMAL_SLOT_TIME_IN_HOURS:
-            return make_422_response({'end_date': f'Maximal slot time is {services.MAXIMAL_SLOT_TIME_IN_HOURS} hours'})
-        # if start_datetime < now:
-        #     return make_422_response({'start_date': 'Start date is too old'})
-        # if end_datetime < now:
-        #     return make_422_response({'start_date': 'End date is too old'})
+            return make_422_response({'end_datetime': f'Maximal slot time is {services.MAXIMAL_SLOT_TIME_IN_HOURS} hours'})
+        if start_datetime < now:
+            return make_422_response({'start_datetime': 'Start date is too old'})
+        if end_datetime < now:
+            return make_422_response({'end_datetime': 'End date is too old'})
 
         start_time_minutes_str = str(date_range.start_time).split(':')[1]
         end_time_minutes_str = str(date_range.end_time).split(':')[1]
         if int(start_time_minutes_str) % 5 != 0:
-            return make_422_response({'start_date': 'Invalid start date minutes'})
+            return make_422_response({'start_datetime': 'Invalid start date minutes'})
         if int(end_time_minutes_str) % 5 != 0:
-            return make_422_response({'end_date': 'Invalid end date minutes'})
+            return make_422_response({'end_datetime': 'Invalid end date minutes'})
 
-        slots = services.get_slots_by_master_id(master_id)
+        previous_date = now - timedelta(days=1)
+        slots = services.get_slots_by_date_range_and_master_id(master_id, start_date=previous_date)
 
         for slot in slots:
             slot_date_range = DateRange(slot.start_datetime, slot.end_datetime)
             if date_range.has_intersection(slot_date_range, include_start=False, include_end=False) or\
-                    date_range.is_equal(slot_date_range):
+                    date_range.is_equal(slot_date_range) or \
+                    (slot_date_range.includes(date_range.end_datetime) and slot_date_range.start_datetime == date_range.start_datetime) or \
+                    (slot_date_range.includes(date_range.start_datetime) and slot_date_range.end_datetime == date_range.end_datetime):
                 return make_422_response({'start_date': 'Date range intersection'})
 
         slot = services.create_slot(master_id, start_datetime, end_datetime)
@@ -185,7 +189,7 @@ class BookingDetailAPIView(GenericAPIView):
         },
         operation_description=''
     )
-    # @check_access_token
+    @check_access_token
     def get(self, request, booking_id: int):
         booking = services.get_booking_by_id_or_none(booking_id)
         if booking is None:

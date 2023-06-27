@@ -25,16 +25,19 @@ def get_slots_with_bookings_by_date_range_and_master_id(master_id: int,
 
 
 def get_slots_by_date_range_and_master_id(master_id: int,
-                                          start_date: datetime,
-                                          end_date: datetime) -> List[Slots]:
+                                          start_date: datetime = None,
+                                          end_date: datetime = None) -> List[Slots]:
     """
 
     """
-    return list(Slots.objects.filter(
-        master_id=master_id,
-        start_datetime__date__gte=start_date,
-        end_datetime__date__lte=end_date
-    ))
+    filters = {
+        'master_id': master_id,
+    }
+    if start_date is not None:
+        filters['start_datetime__date__gte'] = start_date
+    if end_date is not None:
+        filters['end_datetime__date__lte'] = end_date
+    return list(Slots.objects.filter(**filters))
 
 
 def get_slots_by_master_id(master_id: int) -> List[Slots]:
