@@ -38,6 +38,14 @@ class CreateSlotSerializer(serializers.ModelSerializer):
         exclude = ('master', )
 
 
+class GenerateSlotsQuerySerializer(serializers.Serializer):
+    date = serializers.DateField(format='%Y-%m-%d')
+    start_time = serializers.TimeField(format='%H:%M')
+    end_time = serializers.TimeField(format='%H:%M')
+    duration_in_minutes = serializers.IntegerField()
+    interval_in_minutes = serializers.IntegerField(required=False)
+
+
 class BookSlotSerializer(serializers.Serializer):
     slot_id = serializers.IntegerField()
     service_id = serializers.IntegerField()

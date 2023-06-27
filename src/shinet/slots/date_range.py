@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, time, date
 
 
-class InvalidDateRange(Exception):
+class InvalidDateRangeException(Exception):
 
     def __init__(self, message):
         self.message = message
@@ -18,7 +18,7 @@ class DateRange:
 
     def __init__(self, start_datetime: datetime, end_datetime: datetime, replace_seconds=True, replace_nanoseconds=True):
         if start_datetime > end_datetime:
-            raise InvalidDateRange('Start date must be earlier than end date')
+            raise InvalidDateRangeException('Start date must be earlier than end date')
         if replace_nanoseconds:
             self._start_datetime = start_datetime.replace(microsecond=0)
             self._end_datetime = end_datetime.replace(microsecond=0)

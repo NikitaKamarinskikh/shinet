@@ -14,7 +14,8 @@ from shinet.services import HTTP_422_RESPONSE_SWAGGER_SCHEME, make_422_response
 from users.services import get_user_phone_numbers
 from . import serializers
 from . import services
-from .date_range import DateRange, InvalidDateRange
+from .mixins import SlotsValidationMixin
+from .date_range import DateRange, InvalidDateRangeException
 
 
 class SlotsListAPIView(GenericAPIView):
@@ -53,7 +54,7 @@ class SlotsListAPIView(GenericAPIView):
         return Response(status=status.HTTP_200_OK, data=serializer.data)
 
 
-class CreateSlotAPIView(GenericAPIView):
+class CreateSlotAPIView(SlotsValidationMixin, GenericAPIView):
     serializer_class = serializers.CreateSlotSerializer
 
     @swagger_auto_schema(
@@ -85,43 +86,23 @@ class CreateSlotAPIView(GenericAPIView):
         start_datetime = serializer.validated_data.get('start_datetime')
         end_datetime = serializer.validated_data.get('end_datetime')
 
-        now = datetime.now()
-        try:
-            date_range = DateRange(start_datetime, end_datetime)
-        except InvalidDateRange:
-            return make_422_response({'start_datetime': 'Start date must be earlier than end date'})
-        if start_datetime == end_datetime:
-            return make_422_response({'end_datetime': 'End date must not be same as start_date'})
-        if date_range.duration_in_minutes < services.MINIMAL_SLOT_TIME_IN_MINUTES:
-            return make_422_response({'end_datetime': f'Minimal slot time is {services.MINIMAL_SLOT_TIME_IN_MINUTES} minutes'})
-        if date_range.duration_in_hours > services.MAXIMAL_SLOT_TIME_IN_HOURS:
-            return make_422_response({'end_datetime': f'Maximal slot time is {services.MAXIMAL_SLOT_TIME_IN_HOURS} hours'})
-        if start_datetime < now:
-            return make_422_response({'start_datetime': 'Start date is too old'})
-        if end_datetime < now:
-            return make_422_response({'end_datetime': 'End date is too old'})
-
-        start_time_minutes_str = str(date_range.start_time).split(':')[1]
-        end_time_minutes_str = str(date_range.end_time).split(':')[1]
-        if int(start_time_minutes_str) % 5 != 0:
-            return make_422_response({'start_datetime': 'Invalid start date minutes'})
-        if int(end_time_minutes_str) % 5 != 0:
-            return make_422_response({'end_datetime': 'Invalid end date minutes'})
-
-        previous_date = now - timedelta(days=1)
+        previous_date = datetime.now() - timedelta(days=1)
         slots = services.get_slots_by_date_range_and_master_id(master_id, start_date=previous_date)
 
-        for slot in slots:
-            slot_date_range = DateRange(slot.start_datetime, slot.end_datetime)
-            if date_range.has_intersection(slot_date_range, include_start=False, include_end=False) or\
-                    date_range.is_equal(slot_date_range) or \
-                    (slot_date_range.includes(date_range.end_datetime) and slot_date_range.start_datetime == date_range.start_datetime) or \
-                    (slot_date_range.includes(date_range.start_datetime) and slot_date_range.end_datetime == date_range.end_datetime):
-                return make_422_response({'start_date': 'Date range intersection'})
+        slot_validation = self.validate_slot_dates(master_id, start_datetime, end_datetime, slots)
+        if not slot_validation.is_valid():
+            return make_422_response(slot_validation.errors)
 
         slot = services.create_slot(master_id, start_datetime, end_datetime)
         slot_serializer = serializers.SlotSerializer(slot)
         return Response(status=status.HTTP_200_OK, data=slot_serializer.data)
+
+
+class GenerateSlotsAPIView(SlotsValidationMixin, GenericAPIView):
+    serializer_class = serializers.GenerateSlotsQuerySerializer
+
+    def post(self, request):
+        ...
 
 
 class BookSlotAPIView(GenericAPIView):
