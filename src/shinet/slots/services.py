@@ -4,6 +4,8 @@ This module contains additional functions for `slots` app
 from __future__ import annotations
 from typing import List
 from datetime import datetime
+
+from .date_range import DateRange
 from .models import Slots, Bookings
 
 MINIMAL_SLOT_TIME_IN_MINUTES = 30
@@ -56,6 +58,21 @@ def create_slot(master_id: int, start_datetime: datetime, end_datetime: datetime
         start_datetime=start_datetime,
         end_datetime=end_datetime
     )
+
+
+def create_slots(master_id: int, date_ranges: List[DateRange]) -> None:
+    """
+
+    """
+    slots_objects = [
+        Slots(
+            master_id=master_id,
+            start_datetime=date_range.start_datetime,
+            end_datetime=date_range.end_datetime
+        )
+        for date_range in date_ranges
+    ]
+    Slots.objects.bulk_create(slots_objects)
 
 
 def get_bookings_by_slot_id(slot_id: int) -> List[Bookings]:

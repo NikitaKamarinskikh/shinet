@@ -1,6 +1,7 @@
 import logging
+from typing import List
+from datetime import datetime, timezone, timedelta, time
 
-from datetime import datetime, timezone, timedelta
 from django.utils import timezone
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -71,7 +72,6 @@ class CreateSlotAPIView(SlotsValidationMixin, GenericAPIView):
             status.HTTP_200_OK: serializers.SlotSerializer(many=True),
             status.HTTP_403_FORBIDDEN: 'Access denied',
             status.HTTP_422_UNPROCESSABLE_ENTITY: HTTP_422_RESPONSE_SWAGGER_SCHEME,
-            status.HTTP_500_INTERNAL_SERVER_ERROR: 'Server error'
         },
         operation_description='This method gets `master_id` from access_token'
     )
@@ -101,8 +101,76 @@ class CreateSlotAPIView(SlotsValidationMixin, GenericAPIView):
 class GenerateSlotsAPIView(SlotsValidationMixin, GenericAPIView):
     serializer_class = serializers.GenerateSlotsQuerySerializer
 
+    @swagger_auto_schema(
+        request_headers={
+            'Authorization': 'Bearer <token>'
+        },
+        manual_parameters=[
+            openapi.Parameter(
+                'Authorization', openapi.IN_HEADER, 'Access token',
+                type=openapi.TYPE_STRING
+            ),
+        ],
+        responses={
+            status.HTTP_200_OK: '',
+            status.HTTP_403_FORBIDDEN: 'Access denied',
+            status.HTTP_422_UNPROCESSABLE_ENTITY: HTTP_422_RESPONSE_SWAGGER_SCHEME,
+        },
+        operation_description='This method gets `master_id` from access_token'
+    )
+    @check_access_token
     def post(self, request):
-        ...
+        payload = get_payload_from_token(request)
+        master_id = payload.get('master_id')
+        if master_id is None:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        serializer = serializers.GenerateSlotsQuerySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        slot_date = serializer.validated_data.get('date')
+        start_time_str = serializer.validated_data.get('start_time')
+        end_time_str = serializer.validated_data.get('end_time')
+        duration_in_minutes = serializer.validated_data.get('duration_in_minutes')
+        interval_in_minutes = serializer.validated_data.get('interval_in_minutes')
+        if interval_in_minutes is None:
+            interval_in_minutes = 0
+
+        start_time_str = f'{slot_date} {start_time_str}'
+        end_time_str = f'{slot_date} {end_time_str}'
+
+        start_datetime = datetime.strptime(start_time_str, '%Y-%m-%d %H:%M:%S')
+        end_datetime = datetime.strptime(end_time_str, '%Y-%m-%d %H:%M:%S')
+        try:
+            date_ranges = self._divide_time_range(start_datetime, end_datetime, duration_in_minutes, interval_in_minutes)
+        except InvalidDateRangeException:
+            return make_422_response({'start_datetime': 'Invalid start date'})
+
+        for i in range(len(date_ranges) - 1):
+            if date_ranges[i].has_intersection(date_ranges[i + 1], include_start=False, include_end=False)\
+                    or date_ranges[i].is_equal(date_ranges[i + 1]):
+                return make_422_response({'start_datetime': 'Daterange intersections'})
+
+        previous_date = start_datetime - timedelta(days=1)
+        slots = services.get_slots_by_date_range_and_master_id(master_id, start_date=previous_date)
+
+        for date_range in date_ranges:
+            slot_validation = self.validate_slot_dates(master_id, date_range.start_datetime, date_range.end_datetime, slots)
+            if not slot_validation.is_valid():
+                return make_422_response(slot_validation.errors)
+
+        services.create_slots(master_id, date_ranges)
+
+        return Response(status=status.HTTP_200_OK)
+
+    def _divide_time_range(self, start_time: datetime, end_time: datetime, duration: int, interval: int = 0) -> List[DateRange]:
+        result: List[DateRange] = list()
+        current_time = start_time
+        while (current_time + timedelta(minutes=duration)) < end_time:
+            end_interval_time = current_time + timedelta(minutes=duration)
+            result.append(DateRange(current_time, end_interval_time))
+            current_time = end_interval_time + timedelta(minutes=interval)
+        return result
 
 
 class BookSlotAPIView(GenericAPIView):
@@ -140,7 +208,7 @@ class BookSlotAPIView(GenericAPIView):
         current_bookings = services.get_bookings_by_slot_id(slot_id)
         for booking in current_bookings:
             booking_range = DateRange(booking.start_datetime, booking.end_datetime)
-            if new_booking_date_range.has_intersection(booking_range, include_start=False, include_end=False) or\
+            if new_booking_date_range.has_intersection(booking_range, include_start=False, include_end=False) or \
                     new_booking_date_range.is_equal(booking_range):
                 return make_422_response({'start_date': 'Date range intersection'})
 
@@ -179,4 +247,3 @@ class BookingDetailAPIView(GenericAPIView):
         setattr(booking.client, 'phone_numbers', client_phone_numbers)
         serializer = serializers.BookingDetailSerializer(booking)
         return Response(status=status.HTTP_200_OK, data=serializer.data)
-
