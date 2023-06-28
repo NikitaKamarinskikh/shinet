@@ -7,6 +7,7 @@ urlpatterns = [
     path('create/', views.CreateSlotAPIView.as_view()),
     path('generate/', views.GenerateSlotsAPIView.as_view()),
     path('book/', views.BookSlotAPIView.as_view()),
+    path('book/unregistered/', views.BookSlotForUnregisteredClient.as_view()),
     path('booking/<int:booking_id>/', views.BookingDetailAPIView.as_view()),
 ]
 

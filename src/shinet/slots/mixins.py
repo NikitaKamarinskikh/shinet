@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List
 from datetime import datetime, timedelta
 
 from .services import MINIMAL_SLOT_TIME_IN_MINUTES, MAXIMAL_SLOT_TIME_IN_HOURS
@@ -74,4 +74,36 @@ class SlotsValidationMixin:
     def _check_intersections_with_unregistered_clients_slots(self,  master_id: int, date_range: DateRange) -> ValidationResult:
         return ValidationResult(is_valid=True)
 
+
+class BookingValidationMixin:
+
+    def validate_booking_time(self, start_datetime: datetime, end_datetime:  datetime,
+                              bookings, unregistered_bookings) -> ValidationResult:
+        now = datetime.now()
+        if start_datetime < now:
+            return ValidationResult({'start_datetime': 'Start date is too old'})
+        if end_datetime < now:
+            return ValidationResult({'end_datetime': 'End date is too old'})
+        try:
+            new_booking_date_range = DateRange(start_datetime, end_datetime)
+        except InvalidDateRangeException:
+            return ValidationResult({'end_datetime': 'End date is too old'})
+
+        for booking in bookings:
+            booking_range = DateRange(booking.start_datetime, booking.end_datetime)
+            if new_booking_date_range.has_intersection(booking_range, include_start=False, include_end=False) or \
+                    new_booking_date_range.is_equal(booking_range) or\
+                    (booking_range.includes(new_booking_date_range.end_datetime) and booking_range.start_datetime == new_booking_date_range.start_datetime) or \
+                    (booking_range.includes(new_booking_date_range.start_datetime) and booking_range.end_datetime == new_booking_date_range.end_datetime):
+                return ValidationResult({'start_date': 'Date range intersection'})
+
+        for booking in unregistered_bookings:
+            booking_range = DateRange(booking.start_datetime, booking.end_datetime)
+            if new_booking_date_range.has_intersection(booking_range, include_start=False, include_end=False) or \
+                    new_booking_date_range.is_equal(booking_range) or\
+                    (booking_range.includes(new_booking_date_range.end_datetime) and booking_range.start_datetime == new_booking_date_range.start_datetime) or \
+                    (booking_range.includes(new_booking_date_range.start_datetime) and booking_range.end_datetime == new_booking_date_range.end_datetime):
+                return ValidationResult({'start_date': 'Date range intersection'})
+
+        return ValidationResult(is_valid=True)
 

@@ -15,7 +15,7 @@ from shinet.services import HTTP_422_RESPONSE_SWAGGER_SCHEME, make_422_response
 from users.services import get_user_phone_numbers
 from . import serializers
 from . import services
-from .mixins import SlotsValidationMixin
+from .mixins import SlotsValidationMixin, BookingValidationMixin
 from .date_range import DateRange, InvalidDateRangeException
 
 
@@ -173,7 +173,7 @@ class GenerateSlotsAPIView(SlotsValidationMixin, GenericAPIView):
         return result
 
 
-class BookSlotAPIView(GenericAPIView):
+class BookSlotAPIView(BookingValidationMixin, GenericAPIView):
     serializer_class = serializers.BookSlotSerializer
 
     @swagger_auto_schema(
@@ -203,17 +203,65 @@ class BookSlotAPIView(GenericAPIView):
 
         start_datetime = serializer.validated_data.get('start_datetime')
         end_datetime = serializer.validated_data.get('end_datetime')
-        new_booking_date_range = DateRange(start_datetime, end_datetime)
 
-        current_bookings = services.get_bookings_by_slot_id(slot_id)
-        for booking in current_bookings:
-            booking_range = DateRange(booking.start_datetime, booking.end_datetime)
-            if new_booking_date_range.has_intersection(booking_range, include_start=False, include_end=False) or \
-                    new_booking_date_range.is_equal(booking_range):
-                return make_422_response({'start_date': 'Date range intersection'})
+        bookings = services.get_bookings_by_slot_id(slot_id)
+        unregistered_clients_bookings = services.get_unregistered_clients_bookings_by_slot_id(slot_id)
+
+        booking_validation = self.validate_booking_time(
+            start_datetime, end_datetime, bookings, unregistered_clients_bookings
+        )
+        if not booking_validation.is_valid():
+            return make_422_response(booking_validation.errors)
 
         booking = services.save_booking(slot_id, service_id, client_id, start_datetime, end_datetime)
         booking_serializer = serializers.BookingSerializer(booking)
+        return Response(status=status.HTTP_200_OK, data=booking_serializer.data)
+
+
+class BookSlotForUnregisteredClient(BookingValidationMixin, GenericAPIView):
+    serializer_class = serializers.UnregisteredBookingSerializer
+
+    @swagger_auto_schema(
+        request_headers={
+            'Authorization': 'Bearer <token>'
+        },
+        manual_parameters=[
+            openapi.Parameter(
+                'Authorization', openapi.IN_HEADER, 'Access token',
+                type=openapi.TYPE_STRING
+            ),
+        ],
+        responses={
+            status.HTTP_200_OK: serializers.UnregisteredBookingSerializer(),
+            status.HTTP_403_FORBIDDEN: 'Access denied',
+            status.HTTP_422_UNPROCESSABLE_ENTITY: HTTP_422_RESPONSE_SWAGGER_SCHEME,
+        },
+        operation_description=''
+    )
+    @check_access_token
+    def post(self, request):
+        serializer = serializers.UnregisteredBookingSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        slot_id = serializer.validated_data.get('slot_id')
+        service_id = serializer.validated_data.get('service_id')
+        client_id = serializer.validated_data.get('client_id')
+        start_datetime = serializer.validated_data.get('start_datetime')
+        end_datetime = serializer.validated_data.get('end_datetime')
+
+        bookings = services.get_bookings_by_slot_id(slot_id)
+        unregistered_clients_bookings = services.get_unregistered_clients_bookings_by_slot_id(slot_id)
+
+        booking_validation = self.validate_booking_time(
+            start_datetime, end_datetime, bookings, unregistered_clients_bookings
+        )
+        if not booking_validation.is_valid():
+            return make_422_response(booking_validation.errors)
+
+        booking = services.save_unregistered_client_booking(
+            slot_id, service_id, client_id, start_datetime, end_datetime
+        )
+        booking_serializer = serializers.UnregisteredBookingSerializer(booking)
         return Response(status=status.HTTP_200_OK, data=booking_serializer.data)
 
 
@@ -247,3 +295,5 @@ class BookingDetailAPIView(GenericAPIView):
         setattr(booking.client, 'phone_numbers', client_phone_numbers)
         serializer = serializers.BookingDetailSerializer(booking)
         return Response(status=status.HTTP_200_OK, data=serializer.data)
+
+

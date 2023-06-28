@@ -17,3 +17,11 @@ class BookingsAdmin(admin.ModelAdmin):
     class Meta:
         model = models.Bookings
 
+
+@admin.register(models.UnregisteredClientsBookings)
+class UnregisteredClientsBookingsAdmin(admin.ModelAdmin):
+    list_display = ('slot', 'service', 'client', 'start_datetime', 'end_datetime')
+
+    class Meta:
+        model = models.UnregisteredClientsBookings
+

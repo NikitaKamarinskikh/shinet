@@ -2,11 +2,11 @@
 This module contains additional functions for `slots` app
 """
 from __future__ import annotations
-from typing import List
+from typing import List, Optional
 from datetime import datetime
 
 from .date_range import DateRange
-from .models import Slots, Bookings
+from .models import Slots, Bookings, UnregisteredClientsBookings
 
 MINIMAL_SLOT_TIME_IN_MINUTES = 30
 MAXIMAL_SLOT_TIME_IN_HOURS = 16
@@ -14,8 +14,8 @@ AVAILABLE_MINUTES = ('00', '15', '30')
 
 
 def get_slots_with_bookings_by_date_range_and_master_id(master_id: int,
-                                          start_date: datetime,
-                                          end_date: datetime) -> List[Slots]:
+                                                        start_date: datetime,
+                                                        end_date: datetime) -> List[Slots]:
     """
 
     """
@@ -82,6 +82,13 @@ def get_bookings_by_slot_id(slot_id: int) -> List[Bookings]:
     return list(Bookings.objects.filter(slot_id=slot_id))
 
 
+def get_unregistered_clients_bookings_by_slot_id(slot_id: int) -> List[UnregisteredClientsBookings]:
+    """
+
+    """
+    return list(UnregisteredClientsBookings.objects.filter(slot_id=slot_id))
+
+
 def save_booking(slot_id: int, service_id: int, client_id: int,
                  start_datetime: datetime, end_datetime: datetime) -> Bookings:
     """
@@ -96,8 +103,19 @@ def save_booking(slot_id: int, service_id: int, client_id: int,
     )
 
 
-def get_booking_by_id_or_none(booking_id: int) -> Bookings | None:
+def save_unregistered_client_booking(slot_id: int, service_id: int, client_id: int,
+                                     start_datetime: datetime, end_datetime: datetime) -> UnregisteredClientsBookings:
+    """
+
+    """
+    return UnregisteredClientsBookings.objects.create(
+        slot_id=slot_id,
+        service_id=service_id,
+        client_id=client_id,
+        start_datetime=start_datetime,
+        end_datetime=end_datetime
+    )
+
+
+def get_booking_by_id_or_none(booking_id: int) -> Optional[Bookings]:
     return Bookings.objects.select_related('service', 'client').filter(pk=booking_id).first()
-
-
-
