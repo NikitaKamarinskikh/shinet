@@ -63,8 +63,12 @@ class BookingDetailSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class UnregisteredBookingSerializer(serializers.ModelSerializer):
-    class Meta:
-        fields = '__all__'
-        model = models.UnregisteredClientsBookings
+class UnregisteredBookingSerializer(serializers.Serializer):
+    slot_id = serializers.IntegerField()
+    service_id = serializers.IntegerField()
+    client_id = serializers.IntegerField()
+    start_datetime = serializers.DateTimeField()
+    end_datetime = serializers.DateTimeField()
+    client_comment = serializers.CharField(required=False)
+
 
