@@ -19,7 +19,7 @@ def get_slots_with_bookings_by_date_range_and_master_id(master_id: int,
     """
 
     """
-    return list(Slots.objects.prefetch_related('bookings').filter(
+    return list(Slots.objects.prefetch_related('bookings', 'unregistered_clients_bookings').filter(
         master_id=master_id,
         start_datetime__date__gte=start_date,
         end_datetime__date__lte=end_date
@@ -60,7 +60,7 @@ def create_slot(master_id: int, start_datetime: datetime, end_datetime: datetime
     )
 
 
-def create_slots(master_id: int, date_ranges: List[DateRange]) -> None:
+def create_slots(master_id: int, date_ranges: List[DateRange], return_instances=False) -> Optional[Slots]:
     """
 
     """
@@ -73,6 +73,9 @@ def create_slots(master_id: int, date_ranges: List[DateRange]) -> None:
         for date_range in date_ranges
     ]
     Slots.objects.bulk_create(slots_objects)
+    if return_instances:
+        start_datetime = date_ranges[0].start_datetime
+        return Slots.objects.filter(start_datetime__gte=start_datetime)
 
 
 def get_bookings_by_slot_id(slot_id: int) -> List[Bookings]:
