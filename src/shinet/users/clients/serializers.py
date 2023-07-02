@@ -20,5 +20,3 @@ class BaseClientSerializer(serializers.ModelSerializer):
         exclude = ('password', 'settings', 'master_info',
                    'role', 'created_at')
 
-
-
