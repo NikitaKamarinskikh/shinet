@@ -16,7 +16,9 @@ def send_message(sender, instance: Bookings, created, **kwargs):
         'slots_15',
         {
             'type': 'notify_master_about_new_booking',
-            'instance': instance
+            'instance': instance,
+            'instance_type': 'booking',
+            'save_keys': True
         }
     )
 

@@ -13,6 +13,7 @@ class BookingSerializer(serializers.ModelSerializer):
 
 class SlotSerializer(serializers.ModelSerializer):
     bookings = BookingSerializer(many=True)
+    unregistered_clients_bookings = BookingSerializer(many=True)
 
     class Meta:
         model = models.Slots
@@ -20,7 +21,7 @@ class SlotSerializer(serializers.ModelSerializer):
 
 
 class SocketSlotSerializer(serializers.ModelSerializer):
-    bookings_list = BookingSerializer(many=True)
+    bookings = BookingSerializer(many=True)
 
     class Meta:
         model = models.Slots

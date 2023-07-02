@@ -12,6 +12,9 @@ class Slots(models.Model):
     def __str__(self):
         return f'{self.master} slot from {self.start_datetime} to {self.end_datetime}'
 
+    # def __str__(self):
+    #     return f'slot from {self.start_datetime} to {self.end_datetime}'
+
     class Meta:
         verbose_name = 'Slot'
         verbose_name_plural = 'Slots'
