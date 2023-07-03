@@ -18,5 +18,11 @@ class BaseClientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Users
         exclude = ('password', 'settings', 'master_info',
-                   'role', 'created_at')
+                   'role')
+
+
+class EditClientSerializer(serializers.Serializer):
+    first_name = serializers.CharField(required=False)
+    last_name = serializers.CharField(required=False)
+    email = serializers.EmailField(required=False)
 

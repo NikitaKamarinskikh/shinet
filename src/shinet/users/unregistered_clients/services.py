@@ -2,7 +2,8 @@
 This module contains some additional functions for `unregistered_clients`package
 """
 from __future__ import annotations
-from typing import List
+from typing import List, Optional
+
 from users.models import UnregisteredClients, MasterInfo
 
 
@@ -25,6 +26,12 @@ def get_unregistered_clients_by_master_id(master_id: int) -> List[UnregisteredCl
     """
     return UnregisteredClients.objects.filter(master_id=master_id)
 
+
+def get_unregistered_client_by_id_or_none(unregistered_client_id: int) -> Optional[UnregisteredClients]:
+    """
+
+    """
+    return UnregisteredClients.objects.filter(pk=unregistered_client_id).first()
 
 
 
