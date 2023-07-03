@@ -2,11 +2,13 @@
 
 """
 import logging
+
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.response import Response
+
 from tokens.decorators import check_access_token
 from tokens.jwt import JWT
 from . import serializers
@@ -90,3 +92,30 @@ class CreateUnregisteredClientAPIView(GenericAPIView):
 
         return Response(status=status.HTTP_200_OK)
 
+
+class DetailUnregisteredClientAPIView(GenericAPIView):
+    serializer_class = serializers.UnregisteredClientSerializer
+
+    @swagger_auto_schema(
+        request_headers={
+            'Authorization': 'Bearer <token>'
+        },
+        manual_parameters=[
+            openapi.Parameter(
+                'Authorization', openapi.IN_HEADER, 'Access token',
+                type=openapi.TYPE_STRING
+            ),
+        ],
+        responses={
+            status.HTTP_200_OK: serializers.UnregisteredClientSerializer(),
+            status.HTTP_403_FORBIDDEN: 'Access denied',
+            status.HTTP_404_NOT_FOUND: 'Client not found',
+        },
+    )
+    @check_access_token
+    def get(self, request, unregistered_client_id: int):
+        unregistered_client = services.get_unregistered_client_by_id_or_none(unregistered_client_id)
+        if unregistered_client is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        response_serializer = serializers.UnregisteredClientSerializer(unregistered_client)
+        return Response(status=status.HTTP_200_OK, data=response_serializer.data)
