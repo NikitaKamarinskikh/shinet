@@ -11,6 +11,7 @@ from rest_framework.response import Response
 
 from tokens.decorators import check_access_token
 from tokens.jwt import JWT
+from tokens.services import get_payload_from_token
 from . import serializers
 from . import services
 
@@ -114,8 +115,14 @@ class DetailUnregisteredClientAPIView(GenericAPIView):
     )
     @check_access_token
     def get(self, request, unregistered_client_id: int):
+        payload = get_payload_from_token(request)
+        master_id = payload.get('master_id')
+        if master_id is None:
+            return Response(status=status.HTTP_403_FORBIDDEN)
         unregistered_client = services.get_unregistered_client_by_id_or_none(unregistered_client_id)
         if unregistered_client is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
         response_serializer = serializers.UnregisteredClientSerializer(unregistered_client)
         return Response(status=status.HTTP_200_OK, data=response_serializer.data)
+
+
