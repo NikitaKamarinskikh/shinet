@@ -11,7 +11,7 @@ from tokens.jwt import JWT
 from tokens.services import get_payload_from_token
 from . import serializers
 from . import services
-from ..services import get_user_phone_numbers
+from users.clients.services import get_client_phone_number_by_user_id_or_none
 
 
 class ClientDetailAPIView(GenericAPIView):
@@ -34,6 +34,7 @@ class ClientDetailAPIView(GenericAPIView):
         },
         operation_description='This method gets `client_id` from access_token',
     )
+    @check_access_token
     def get(self, request):
         payload = get_payload_from_token(request)
         user_id = payload.get('user_id')
@@ -42,8 +43,10 @@ class ClientDetailAPIView(GenericAPIView):
         client = services.get_client_by_id_or_none(user_id)
         if client is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        client_phone_numbers = get_user_phone_numbers(client.pk)
-        setattr(client, 'phone_numbers', client_phone_numbers)
+        client_phone_number = get_client_phone_number_by_user_id_or_none(client.pk)
+        if client_phone_number is None:
+            client_phone_number = ''
+        setattr(client, 'phone_number', client_phone_number)
         response_serializer = serializers.BaseClientSerializer(client)
         return Response(status=status.HTTP_200_OK, data=response_serializer.data)
 
@@ -68,8 +71,8 @@ class EditClientAPIView(GenericAPIView):
         },
         operation_description='',
     )
+    @check_access_token
     def patch(self, request):
-
         payload = get_payload_from_token(request)
         user_id = payload.get('user_id')
         if user_id is None:
@@ -80,16 +83,22 @@ class EditClientAPIView(GenericAPIView):
         serializer = serializers.EditClientSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        print(serializer.validated_data)
-        if 'email' in serializer.validated_data:
-            print('email', 'email', 'email')
+        data = dict()
+        if serializer.validated_data.get('first_name'):
+            data['first_name'] = serializer.validated_data.get('first_name')
+        if serializer.validated_data.get('last_name'):
+            data['last_name'] = serializer.validated_data.get('last_name')
 
-        services.update_client(user_id, serializer.validated_data)
+        services.update_client(user_id, data)
 
-        # updated_client = services.get_client_by_id_or_none(user_id)
+        updated_client = services.get_client_by_id_or_none(user_id)
 
-        # response_serializer = serializers.ClientSerializer(updated_client)
-        response_serializer = serializers.ClientSerializer(client)
+        phone_number = serializer.validated_data.get('phone_number')
+        if phone_number:
+            services.create_or_replace_client_phone_number(user_id, phone_number)
+            setattr(updated_client, 'phone_number', phone_number)
+
+        response_serializer = serializers.BaseClientSerializer(updated_client)
         return Response(status=status.HTTP_200_OK, data=response_serializer.data)
 
 
