@@ -11,9 +11,7 @@ class ClientSerializer(serializers.ModelSerializer):
 
 
 class BaseClientSerializer(serializers.ModelSerializer):
-    phone_numbers = serializers.ListField(
-        child=serializers.CharField(), required=False
-    )
+    phone_number = serializers.CharField()
 
     class Meta:
         model = Users
@@ -24,5 +22,5 @@ class BaseClientSerializer(serializers.ModelSerializer):
 class EditClientSerializer(serializers.Serializer):
     first_name = serializers.CharField(required=False)
     last_name = serializers.CharField(required=False)
-    email = serializers.EmailField(required=False)
+    phone_number = serializers.CharField(required=False)
 
