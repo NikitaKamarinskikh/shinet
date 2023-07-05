@@ -13,8 +13,9 @@ from asgiref.sync import sync_to_async, async_to_sync
 from django.db.models import Prefetch
 
 from slots.models import Slots
-from slots.services import get_slots_with_bookings_by_date_range_and_master_id, get_slots_by_date_range_and_master_id, get_bookings_by_slot_id
 from slots import serializers
+from slots import services as slots_services
+
 
 SCHEDULE_KEY = 'schedule'
 UNREAD_MESSAGES_QUANTITY_KEY = 'unread_messages'
@@ -38,14 +39,12 @@ class SlotConsumer(AsyncWebsocketConsumer):
         await self.accept()
 
     async def disconnect(self, code):
-        print(f'disconnected group {self.room_group_name} with code {code}')
         await self.channel_layer.group_discard(
             self.room_group_name,
             self.channel_name
         )
 
     async def receive(self, text_data):
-        print('text data:', text_data)
         try:
             request = json.loads(text_data)
             await self._process_input_request(request)
@@ -53,16 +52,13 @@ class SlotConsumer(AsyncWebsocketConsumer):
             logging.exception(e)
 
     async def notify_master_about_new_booking(self, event):
-        print('Instance:', event['instance'])
         await self._process_input_request(event)
 
     async def _process_input_request(self, request):
-        print('request', request)
         response_data = dict()
         if request is not None:
             if not request.get('save_keys'):
                 self._keys = request.keys()
-        print('self._keys', self._keys)
         if SCHEDULE_KEY in self._keys:
             parameters = None
             if request is not None:
@@ -89,35 +85,24 @@ class SlotConsumer(AsyncWebsocketConsumer):
                 self.schedule_start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
                 self.schedule_end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
 
-        slots = await sync_to_async(get_slots_with_bookings_by_date_range_and_master_id)(
+        slots = await sync_to_async(slots_services.get_slots_by_date_range_and_master_id)(
             self.room_name, self.schedule_start_date, self.schedule_end_date
         )
+        for slot in slots:
+            bookings_list = []
+            bookings = await sync_to_async(slots_services.get_bookings_by_slot_id)(slot.pk)
+            unregistered_clients_bookings =\
+                await sync_to_async(slots_services.get_unregistered_clients_bookings_by_slot_id)(slot.pk)
+            for booking in bookings:
+                setattr(booking, 'type', 'registered_client')
+                bookings_list.append(booking)
+            for unregistered_client_booking in unregistered_clients_bookings:
+                setattr(unregistered_client_booking, 'type', 'unregistered_client')
+                bookings_list.append(unregistered_client_booking)
+            setattr(slot, 'bookings_list', bookings_list)
+
         serializer = serializers.SocketSlotSerializer(slots, many=True)
-        items = serializer.data
-        if parameters.get('type') == 'notify_master_about_new_booking':
-            item_exists = False
-            for item in items:
-                if item.get('id') == parameters.get('instance').slot.pk:
-                    item_bookings = item.get('bookings')
-                    for booking in item_bookings:
-                        if booking.get('id') == parameters.get('instance').pk:
-                            item_exists = True
-                            break
-                if not item_exists:
-                    instance_item = OrderedDict(
-                        [
-                            ('id', parameters.get('instance').pk),
-                            ('start_datetime', parameters.get('instance').start_datetime.strftime('%Y-%m-%d %H:%M')),
-                            ('end_datetime', parameters.get('instance').end_datetime.strftime('%Y-%m-%d %H:%M')),
-                            ('client_comment', parameters.get('instance').client_comment),
-                            ('slot', parameters.get('instance').slot.pk),
-                            ('service', parameters.get('instance').service.pk),
-                            ('client', parameters.get('instance').client.pk),
-                        ]
-                    )
-                    item.get('bookings').append(instance_item)
-                break
-        return items
+        return serializer.data
 
     async def _count_unread_messages(self) -> int:
         return 999
