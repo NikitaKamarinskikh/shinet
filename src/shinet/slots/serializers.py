@@ -20,14 +20,6 @@ class SlotSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class SocketSlotSerializer(serializers.ModelSerializer):
-    bookings = BookingSerializer(many=True)
-
-    class Meta:
-        model = models.Slots
-        fields = '__all__'
-
-
 class SlotsListQuerySerializer(serializers.Serializer):
     start_date = serializers.DateField()
     end_date = serializers.DateField()
@@ -72,4 +64,20 @@ class UnregisteredBookingSerializer(serializers.Serializer):
     end_datetime = serializers.DateTimeField()
     client_comment = serializers.CharField(required=False)
 
+
+class TypedBookingSerializer(serializers.Serializer):
+    slot_id = serializers.IntegerField()
+    service_id = serializers.IntegerField()
+    client_id = serializers.IntegerField()
+    start_datetime = serializers.DateTimeField()
+    end_datetime = serializers.DateTimeField()
+    type = serializers.CharField()
+
+
+class SocketSlotSerializer(serializers.ModelSerializer):
+    bookings_list = TypedBookingSerializer(many=True)
+
+    class Meta:
+        model = models.Slots
+        fields = '__all__'
 
