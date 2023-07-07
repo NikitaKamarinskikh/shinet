@@ -6,6 +6,8 @@ from rest_framework import status
 from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.response import Response
 
+from shinet.services import make_422_response
+from users.registration.services import make_sha256_hash
 from tokens.decorators import check_access_token
 from tokens.jwt import JWT
 from tokens.services import get_payload_from_token
@@ -146,6 +148,50 @@ class EditClientEmailAPIView(GenericAPIView):
 
         response_serializer = serializers.BaseClientSerializer(updated_client)
         return Response(status=status.HTTP_200_OK, data=response_serializer.data)
+
+
+class EditClientPasswordAPIView(GenericAPIView):
+    serializer_class = serializers.EditClientPasswordSerializer
+
+    @swagger_auto_schema(
+        request_headers={
+            'Authorization': 'Bearer <token>',
+        },
+        manual_parameters=[
+            openapi.Parameter(
+                'Authorization', openapi.IN_HEADER, 'Access token',
+                type=openapi.TYPE_STRING
+            ),
+        ],
+        responses={
+            status.HTTP_200_OK: 'Password changed successfully',
+            status.HTTP_403_FORBIDDEN: 'Access denied',
+        },
+        operation_description='This method gets `client_id` from access_token',
+    )
+    @check_access_token
+    def patch(self, request):
+        payload = get_payload_from_token(request)
+        user_id = payload.get('user_id')
+        if user_id is None:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        serializer = serializers.EditClientPasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        current_password = serializer.validated_data.get('current_password')
+        new_password = serializer.validated_data.get('new_password')
+
+        password_hash = make_sha256_hash(current_password)
+
+        client = services.get_client_by_filters_or_none(user_id, password=password_hash)
+        if client is None:
+            return make_422_response({'current_password': 'Invalid current password'})
+
+        client.password = make_sha256_hash(new_password)
+        client.save()
+
+        return Response(status=status.HTTP_200_OK)
+
 
 
 

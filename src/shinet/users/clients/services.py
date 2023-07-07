@@ -28,6 +28,13 @@ def get_client_phone_number_by_user_id_or_none(user_id: int) -> Optional[str]:
         filter(user_id=user_id).first()
 
 
+def get_client_by_filters_or_none(client_id: int, **filters) -> Optional[Users]:
+    """
+
+    """
+    return Users.objects.filter(pk=client_id, **filters).first()
+
+
 def create_or_replace_client_phone_number(user_id: int, phone_number: str) -> UsersPhonesNumbers:
     """
 
@@ -39,5 +46,9 @@ def create_or_replace_client_phone_number(user_id: int, phone_number: str) -> Us
         phone_number_instance.phone_number = phone_number
         phone_number_instance.save()
     return phone_number_instance
+
+
+
+
 
 
