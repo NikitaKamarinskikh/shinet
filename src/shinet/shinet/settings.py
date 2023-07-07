@@ -44,7 +44,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'channels',
-
     'rest_framework',
     'drf_yasg',
     'corsheaders',
@@ -54,6 +53,7 @@ INSTALLED_APPS = [
     'tokens.apps.TokensConfig',
     'subscriptions.apps.SubscriptionsConfig',
     'slots.apps.SlotsConfig',
+    'verification.apps.VerificationConfig',
 ]
 
 REST_FRAMEWORK = {

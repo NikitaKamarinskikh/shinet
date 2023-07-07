@@ -2,7 +2,7 @@
 
 from django.db import migrations, models
 import django.db.models.deletion
-import users.models
+import verification.models
 
 
 class Migration(migrations.Migration):
@@ -82,7 +82,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('email', models.EmailField(max_length=254, unique=True, verbose_name='Email')),
                 ('code', models.PositiveIntegerField(unique=True, verbose_name='Код')),
-                ('expiration_time', models.DateTimeField(default=users.models.get_code_expiration_time, editable=False, verbose_name='Время истечения')),
+                ('expiration_time', models.DateTimeField(default=verification.models.get_code_expiration_time, editable=False, verbose_name='Время истечения')),
             ],
             options={
                 'verbose_name': 'Код для проверки',
