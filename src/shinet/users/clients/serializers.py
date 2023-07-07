@@ -24,3 +24,6 @@ class EditClientSerializer(serializers.Serializer):
     last_name = serializers.CharField(required=False)
     phone_number = serializers.CharField(required=False)
 
+
+class EditClientEmailSerializer(serializers.Serializer):
+    email = serializers.EmailField()

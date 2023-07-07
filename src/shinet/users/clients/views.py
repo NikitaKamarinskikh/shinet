@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from tokens.decorators import check_access_token
 from tokens.jwt import JWT
 from tokens.services import get_payload_from_token
+from verification.decorators import check_verification_token
 from . import serializers
 from . import services
 from users.clients.services import get_client_phone_number_by_user_id_or_none
@@ -100,5 +101,52 @@ class EditClientAPIView(GenericAPIView):
 
         response_serializer = serializers.BaseClientSerializer(updated_client)
         return Response(status=status.HTTP_200_OK, data=response_serializer.data)
+
+
+class EditClientEmailAPIView(GenericAPIView):
+    serializer_class = serializers.EditClientEmailSerializer
+
+    @swagger_auto_schema(
+        request_headers={
+            'Authorization': 'Bearer <token>',
+            'Verification': 'Bearer <token>'
+        },
+        manual_parameters=[
+            openapi.Parameter(
+                'Authorization', openapi.IN_HEADER, 'Access token',
+                type=openapi.TYPE_STRING
+            ),
+            openapi.Parameter(
+                'Verification', openapi.IN_HEADER, 'Verification token',
+                type=openapi.TYPE_STRING
+            ),
+        ],
+        responses={
+            status.HTTP_200_OK: serializers.BaseClientSerializer(),
+            status.HTTP_404_NOT_FOUND: 'Client not found',
+            status.HTTP_403_FORBIDDEN: 'Access denied',
+            status.HTTP_500_INTERNAL_SERVER_ERROR: 'Server error'
+        },
+        operation_description='This method gets `client_id` from access_token',
+    )
+    @check_access_token
+    @check_verification_token
+    def patch(self, request):
+        payload = get_payload_from_token(request)
+        user_id = payload.get('user_id')
+        if user_id is None:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        serializer = serializers.EditClientEmailSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        email = serializer.validated_data.get('email')
+
+        services.update_client(user_id, {'email': email})
+        updated_client = services.get_client_by_id_or_none(user_id)
+
+        response_serializer = serializers.BaseClientSerializer(updated_client)
+        return Response(status=status.HTTP_200_OK, data=response_serializer.data)
+
+
 
 
