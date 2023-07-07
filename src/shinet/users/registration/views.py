@@ -19,7 +19,7 @@ from users.settings import UsersRoles
 from .services import save_phone_numbers, create_uuid
 from ..locations.serializers import LocationSerializer
 from ..models import UserSettings, MasterInfo, Locations
-from ..verification.services import get_user_by_email_or_none
+from verification.services import get_user_by_email_or_none
 
 
 class ClientsRegistrationAPIView(GenericAPIView):
