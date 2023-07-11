@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from users.models import Users
+from users.serializers import UserSettingsSerializer
 
 
 class ClientSerializer(serializers.ModelSerializer):
@@ -12,10 +13,11 @@ class ClientSerializer(serializers.ModelSerializer):
 
 class BaseClientSerializer(serializers.ModelSerializer):
     phone_number = serializers.CharField()
+    settings = UserSettingsSerializer()
 
     class Meta:
         model = Users
-        exclude = ('password', 'settings', 'master_info',
+        exclude = ('password', 'master_info',
                    'role')
 
 

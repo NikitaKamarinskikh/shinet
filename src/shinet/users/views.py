@@ -7,7 +7,6 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
 
-
 from shinet.services import HTTP_422_RESPONSE_SWAGGER_SCHEME, make_422_response
 from tokens.decorators import check_access_token
 from tokens.services import get_payload_from_access_token
