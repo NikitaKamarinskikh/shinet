@@ -10,6 +10,10 @@
         "inner_key": ["example_value"],
     },
     "other_key": 0,
+    "errors": {
+        "message": "message text",
+        "key_name": "key name error" 
+    }
 }
 ```
 
