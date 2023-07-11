@@ -66,7 +66,7 @@ class Locations(models.Model):
 
 
 class UserSettings(models.Model):
-    color_theme = models.CharField(verbose_name='Цветовая тема', max_length=255, default='LIGHT')
+    notification_status = models.BooleanField(verbose_name='отправлять уведомления', default=True)
 
     class Meta:
         verbose_name = 'Настройки пользователя'
@@ -99,3 +99,13 @@ class UnregisteredClients(models.Model):
         verbose_name_plural = 'Незарегистрированные клиенты'
 
 
+class NotificationTokens(models.Model):
+    user = models.ForeignKey(Users, verbose_name='Пользователь', on_delete=models.CASCADE)
+    token = models.CharField(verbose_name='Токен', max_length=255)
+
+    def __str__(self):
+        return f'{self.user} {self.token[:10]}...'
+
+    class Meta:
+        verbose_name = 'Токен для пуш уведомлений'
+        verbose_name_plural = 'Токены для пуш уведомлений'

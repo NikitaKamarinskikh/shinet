@@ -10,7 +10,7 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 
 from tokens.decorators import check_access_token
-from tokens.services import get_payload_from_token
+from tokens.services import get_payload_from_access_token
 from shinet.services import HTTP_422_RESPONSE_SWAGGER_SCHEME, make_422_response
 from users.services import get_user_phone_numbers
 from . import serializers
@@ -42,7 +42,7 @@ class SlotsListAPIView(GenericAPIView):
     )
     @check_access_token
     def get(self, request):
-        payload = get_payload_from_token(request)
+        payload = get_payload_from_access_token(request)
         master_id = payload.get('master_id')
         if master_id is None:
             return Response(status=status.HTTP_403_FORBIDDEN)
@@ -77,7 +77,7 @@ class CreateSlotAPIView(SlotsValidationMixin, GenericAPIView):
     )
     @check_access_token
     def post(self, request):
-        payload = get_payload_from_token(request)
+        payload = get_payload_from_access_token(request)
         master_id = payload.get('master_id')
         if master_id is None:
             return Response(status=status.HTTP_403_FORBIDDEN)
@@ -120,7 +120,7 @@ class GenerateSlotsAPIView(SlotsValidationMixin, GenericAPIView):
     )
     @check_access_token
     def post(self, request):
-        payload = get_payload_from_token(request)
+        payload = get_payload_from_access_token(request)
         master_id = payload.get('master_id')
         if master_id is None:
             return Response(status=status.HTTP_403_FORBIDDEN)
