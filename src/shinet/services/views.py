@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from shinet.services import HTTP_422_RESPONSE_SWAGGER_SCHEME
 from tokens.decorators import check_access_token
 from .models import Specializations
-from tokens.services import get_payload_from_token
+from tokens.services import get_payload_from_access_token
 from tokens.exceptions import InvalidAccessTokenException
 from . import serializers
 from .services import get_master_services, save_master_service,\
@@ -42,7 +42,7 @@ class MastersServicesListAPIView(GenericAPIView):
     @check_access_token
     def get(self, request: HttpRequest):
         try:
-            payload = get_payload_from_token(request)
+            payload = get_payload_from_access_token(request)
             master_id = payload.get('master_id')
             if master_id is None:
                 return Response(status=status.HTTP_403_FORBIDDEN)
@@ -75,7 +75,7 @@ class AddMasterServiceAPIView(GenericAPIView):
     @check_access_token
     def post(self, request: HttpRequest):
         try:
-            payload = get_payload_from_token(request)
+            payload = get_payload_from_access_token(request)
             master_id = payload.get('master_id')
             if master_id is None:
                 return Response(status=status.HTTP_403_FORBIDDEN)
@@ -109,7 +109,7 @@ class EditMasterServiceAPIView(GenericAPIView):
     @check_access_token
     def patch(self, request):
         try:
-            payload = get_payload_from_token(request)
+            payload = get_payload_from_access_token(request)
             master_id = payload.get('master_id')
             if master_id is None:
                 return Response(status=status.HTTP_403_FORBIDDEN)
@@ -146,7 +146,7 @@ class DeleteMasterServiceAPIView(GenericAPIView):
     @check_access_token
     def delete(self, request, service_id: int):
         try:
-            payload = get_payload_from_token(request)
+            payload = get_payload_from_access_token(request)
             master_id = payload.get('master_id')
             if master_id is None:
                 return Response(status=status.HTTP_403_FORBIDDEN)

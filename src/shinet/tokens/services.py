@@ -84,7 +84,7 @@ def delete_refresh_token_if_exists(user_id: int) -> None:
         current_token.delete()
 
 
-def get_payload_from_token(request: HttpRequest) -> dict:
+def get_payload_from_access_token(request: HttpRequest) -> dict:
     """
     :raises InvalidAccessTokenException:
     """

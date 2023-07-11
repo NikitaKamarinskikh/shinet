@@ -10,7 +10,7 @@ from shinet.services import make_422_response
 from users.registration.services import make_sha256_hash
 from tokens.decorators import check_access_token
 from tokens.jwt import JWT
-from tokens.services import get_payload_from_token
+from tokens.services import get_payload_from_access_token
 from verification.decorators import check_verification_token
 from . import serializers
 from . import services
@@ -39,7 +39,7 @@ class ClientDetailAPIView(GenericAPIView):
     )
     @check_access_token
     def get(self, request):
-        payload = get_payload_from_token(request)
+        payload = get_payload_from_access_token(request)
         user_id = payload.get('user_id')
         if user_id is None:
             return Response(status=status.HTTP_403_FORBIDDEN)
@@ -76,7 +76,7 @@ class EditClientAPIView(GenericAPIView):
     )
     @check_access_token
     def patch(self, request):
-        payload = get_payload_from_token(request)
+        payload = get_payload_from_access_token(request)
         user_id = payload.get('user_id')
         if user_id is None:
             return Response(status=status.HTTP_403_FORBIDDEN)
@@ -134,7 +134,7 @@ class EditClientEmailAPIView(GenericAPIView):
     @check_access_token
     @check_verification_token
     def patch(self, request):
-        payload = get_payload_from_token(request)
+        payload = get_payload_from_access_token(request)
         user_id = payload.get('user_id')
         if user_id is None:
             return Response(status=status.HTTP_403_FORBIDDEN)
@@ -171,7 +171,7 @@ class EditClientPasswordAPIView(GenericAPIView):
     )
     @check_access_token
     def patch(self, request):
-        payload = get_payload_from_token(request)
+        payload = get_payload_from_access_token(request)
         user_id = payload.get('user_id')
         if user_id is None:
             return Response(status=status.HTTP_403_FORBIDDEN)
