@@ -193,6 +193,40 @@ class EditClientPasswordAPIView(GenericAPIView):
         return Response(status=status.HTTP_200_OK)
 
 
+class DeleteClientAPIView(GenericAPIView):
+
+    @swagger_auto_schema(
+        request_headers={
+            'Authorization': 'Bearer <token>',
+        },
+        manual_parameters=[
+            openapi.Parameter(
+                'Authorization', openapi.IN_HEADER, 'Access token',
+                type=openapi.TYPE_STRING
+            ),
+        ],
+        responses={
+            status.HTTP_200_OK: 'User deleted successfully',
+            status.HTTP_404_NOT_FOUND: 'User not found',
+            status.HTTP_403_FORBIDDEN: 'Access denied',
+        },
+        operation_description='This method gets `client_id` from access_token',
+    )
+    @check_access_token
+    def delete(self, request):
+        payload = get_payload_from_access_token(request)
+        print(payload)
+        user_id = payload.get('user_id')
+        if user_id is None:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        client = services.get_client_by_id_or_none(user_id)
+        print(client)
+        if client is None:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        client.delete()
+        return Response(status=status.HTTP_200_OK)
+
+
 
 
 

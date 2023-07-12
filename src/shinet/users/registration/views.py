@@ -51,7 +51,7 @@ class ClientsRegistrationAPIView(GenericAPIView):
         },
         operation_description='You can also add `profile_image` parameter with client photo profile'
     )
-    @check_verification_token
+    # @check_verification_token
     def post(self, request):
         data = request.data.copy()
         data['role'] = UsersRoles.CLIENT.value

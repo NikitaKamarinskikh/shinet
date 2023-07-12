@@ -22,7 +22,8 @@ class Users(models.Model):
 
     def delete(self, *args, **kwargs):
         self.settings.delete()
-        self.master_info.delete()
+        if self.master_info is not None:
+            self.master_info.delete()
         super().delete(*args, **kwargs)
 
     class Meta:
@@ -86,7 +87,7 @@ class UnregisteredClients(models.Model):
     """
     This model contains clients that was created by masters
     """
-    master = models.ForeignKey(MasterInfo, verbose_name='Мастер', on_delete=models.PROTECT)
+    master = models.ForeignKey(MasterInfo, verbose_name='Мастер', on_delete=models.CASCADE)
     first_name = models.CharField(verbose_name='Имя', max_length=255)
     last_name = models.CharField(verbose_name='Фамилия', max_length=255)
     extra_info = models.TextField(verbose_name='Дополнительная информация', null=True, blank=True)
