@@ -26,6 +26,7 @@ def check_verification_token(func: Callable):
             return func(*args, **kwargs)
         except Exception as e:
             logging.exception(e)
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
     return wrapper
 
