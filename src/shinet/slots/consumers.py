@@ -12,6 +12,8 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from asgiref.sync import sync_to_async, async_to_sync
 from django.db.models import Prefetch
 
+from tokens.services import validate_access_token
+from tokens.exceptions import InvalidAccessTokenException
 from slots.models import Slots
 from slots import serializers
 from slots import services as slots_services
@@ -47,6 +49,19 @@ class SlotConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         try:
             request = json.loads(text_data)
+            access_token = request.get('access_token')
+            if access_token is None:
+                await self._answer({
+                    'access_token': 'Access token is not specified'
+                })
+                await self.disconnect(500)
+            try:
+                validate_access_token(access_token)
+            except InvalidAccessTokenException as e:
+                await self._answer({
+                    'access_token': 'Invalid access token'
+                })
+                await self.disconnect(500)
             await self._process_input_request(request)
         except Exception as e:
             logging.exception(e)

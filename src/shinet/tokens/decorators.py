@@ -6,25 +6,18 @@ from rest_framework import status
 
 from .jwt import JWT
 from .exceptions import InvalidAccessTokenException
+from .services import validate_access_token
 
 
 def check_access_token(func: Callable):
 
     def wrapper(*args, **kwargs):
         request = args[1]
-        auth_token = request.META.get('HTTP_AUTHORIZATION')
+        access_token = request.META.get('HTTP_AUTHORIZATION')
         try:
-            bearer, token = auth_token.split()  # 'Bearer' {token}
-            if bearer != 'Bearer':
-                return Response(status=status.HTTP_403_FORBIDDEN)
-            jwt = JWT(token)
-            check_jwt = JWT(jwt.payload)
-            if not check_jwt.is_equal_signature(jwt):
-                return Response(status=status.HTTP_403_FORBIDDEN)
-            if jwt.is_available():
-                return func(*args, **kwargs)
-            return Response(status=status.HTTP_403_FORBIDDEN)
-        except (InvalidAccessTokenException, ValueError, AttributeError) as e:
+            validate_access_token(access_token)
+            return func(*args, **kwargs)
+        except InvalidAccessTokenException as e:
             logging.exception(e)
             return Response(status=status.HTTP_403_FORBIDDEN)
 
