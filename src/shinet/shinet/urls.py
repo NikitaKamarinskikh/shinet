@@ -50,6 +50,7 @@ urlpatterns = [
     path('api/v1/clients/', include('users.clients.urls')),
     path('api/v1/verification/', include('verification.urls')),
     path('api/v1/users/', include('users.urls')),
+    path('api/v1/masters/', include('users.masters.urls')),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 ]
 
