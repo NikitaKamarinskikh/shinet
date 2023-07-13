@@ -49,5 +49,3 @@ def swap_user_notification_status(user_id: int) -> bool:
     return True
 
 
-
-
