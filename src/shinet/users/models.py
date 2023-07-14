@@ -36,6 +36,7 @@ class MasterInfo(models.Model):
     rating = models.PositiveIntegerField(verbose_name='Рейтинг', default=0)
     specializations = models.ManyToManyField(Specializations, blank=True, verbose_name='Специализации')
     uuid = models.PositiveIntegerField(verbose_name='UUID', default=0, unique=True)
+    description = models.TextField(verbose_name='Описание', null=True, blank=True)
 
     def __str__(self) -> str:
         return self.uuid.__str__()

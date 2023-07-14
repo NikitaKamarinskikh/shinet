@@ -11,8 +11,9 @@ from tokens.decorators import check_access_token
 from .models import Specializations
 from tokens.services import get_payload_from_access_token
 from tokens.exceptions import InvalidAccessTokenException
+from users.masters.services import get_master_by_id_or_none
 from . import serializers
-from .services import get_master_services, save_master_service,\
+from .services import get_master_services_by_master_id, save_master_service,\
     get_service_by_id_and_master_id_or_none, update_master_service
 
 
@@ -40,21 +41,52 @@ class MastersServicesListAPIView(GenericAPIView):
         },
     )
     @check_access_token
-    def get(self, request: HttpRequest):
+    def get(self, request):
         try:
             payload = get_payload_from_access_token(request)
             master_id = payload.get('master_id')
             if master_id is None:
                 return Response(status=status.HTTP_403_FORBIDDEN)
-            services = get_master_services(master_id)
+            services = get_master_services_by_master_id(master_id)
             serializer = serializers.MasterServiceSerializer(services, many=True)
             return Response(status=status.HTTP_200_OK, data=serializer.data)
         except InvalidAccessTokenException:
             return Response(status=status.HTTP_403_FORBIDDEN)
 
 
-class AddMasterServiceAPIView(GenericAPIView):
-    serializer_class = serializers.AddMasterServiceSerializer
+class MasterServicesListByMasterIdAPIView(GenericAPIView):
+
+    @swagger_auto_schema(
+        request_headers={
+            'Authorization': 'Bearer <token>'
+        },
+        manual_parameters=[
+            openapi.Parameter(
+                'Authorization', openapi.IN_HEADER, 'Access token',
+                type=openapi.TYPE_STRING
+            ),
+        ],
+        responses={
+            status.HTTP_200_OK: serializers.MasterServiceSerializer(many=True),
+            status.HTTP_403_FORBIDDEN: 'Access denied',
+            status.HTTP_404_NOT_FOUND: 'Master not found'
+        },
+    )
+    @check_access_token
+    def get(self, request, master_id):
+        try:
+            master = get_master_by_id_or_none(master_id)
+            if master is None:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+            services = get_master_services_by_master_id(master_id)
+            serializer = serializers.MasterServiceSerializer(services, many=True)
+            return Response(status=status.HTTP_200_OK, data=serializer.data)
+        except InvalidAccessTokenException:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+
+class CreateMasterServiceAPIView(GenericAPIView):
+    serializer_class = serializers.CreateMasterServiceSerializer
 
     @swagger_auto_schema(
         request_headers={
@@ -73,13 +105,13 @@ class AddMasterServiceAPIView(GenericAPIView):
         },
     )
     @check_access_token
-    def post(self, request: HttpRequest):
+    def post(self, request):
         try:
             payload = get_payload_from_access_token(request)
             master_id = payload.get('master_id')
             if master_id is None:
                 return Response(status=status.HTTP_403_FORBIDDEN)
-            serializer = serializers.AddMasterServiceSerializer(data=request.data)
+            serializer = serializers.CreateMasterServiceSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             save_master_service(master_id, serializer)
             return Response(status=status.HTTP_200_OK)
@@ -113,7 +145,7 @@ class EditMasterServiceAPIView(GenericAPIView):
             master_id = payload.get('master_id')
             if master_id is None:
                 return Response(status=status.HTTP_403_FORBIDDEN)
-            serializer = serializers.AddMasterServiceSerializer(data=request.data)
+            serializer = serializers.CreateMasterServiceSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             data = request.data
             service_id = data.get('service_id')
