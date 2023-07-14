@@ -1,3 +1,4 @@
+from drf_yasg import openapi
 from rest_framework import serializers
 from .models import Specializations, Services
 
@@ -18,12 +19,13 @@ class MasterServiceSerializer(serializers.ModelSerializer):
                   'duration_in_minutes', 'description', 'image')
 
 
-class AddMasterServiceSerializer(serializers.Serializer):
+class CreateMasterServiceSerializer(serializers.Serializer):
     specialization_id = serializers.IntegerField()
     name = serializers.CharField()
     price = serializers.IntegerField(min_value=0)
     duration_in_minutes = serializers.IntegerField()
     description = serializers.CharField()
+    image = serializers.ImageField(required=False)
 
 
 class EditMasterServiceSerializer(serializers.Serializer):

@@ -4,17 +4,17 @@ This module contains some additional functions for `services` package
 from __future__ import annotations
 from typing import List
 from .models import Services, Specializations
-from .serializers import AddMasterServiceSerializer
+from .serializers import CreateMasterServiceSerializer
 
 
-def get_master_services(master_id: int) -> List[Services]:
+def get_master_services_by_master_id(master_id: int) -> List[Services]:
     """
 
     """
     return Services.objects.select_related('specialization', 'master').filter(master_id=master_id)
 
 
-def save_master_service(master_id: int, serializer: AddMasterServiceSerializer) -> Services:
+def save_master_service(master_id: int, serializer: CreateMasterServiceSerializer) -> Services:
     """
 
     """
