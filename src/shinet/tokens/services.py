@@ -1,7 +1,13 @@
 """
 This module contains function to manage RefreshTokens model
 """
+import logging
+
+from django.http import HttpRequest
+
+from .exceptions import InvalidAccessTokenException
 from .models import RefreshTokens
+from .jwt import JWT
 
 
 def create_refresh_token(user_id: int, token: str) -> RefreshTokens:
@@ -82,6 +88,28 @@ def delete_refresh_token_if_exists(user_id: int) -> None:
         current_token.delete()
 
 
+def get_payload_from_access_token(request: HttpRequest) -> dict:
+    """
+    :raises InvalidAccessTokenException:
+    """
+    auth_token = request.META.get('HTTP_AUTHORIZATION')
+    _, access_token = auth_token.split()
+    jwt = JWT(access_token)
+    return jwt.payload
 
 
+def validate_access_token(access_token: str) -> None:
+    try:
+        bearer, token = access_token.split()  # 'Bearer' {token}
+        if bearer != 'Bearer':
+            raise InvalidAccessTokenException()
+        jwt = JWT(token)
+        check_jwt = JWT(jwt.payload)
+        if not check_jwt.is_equal_signature(jwt):
+            raise InvalidAccessTokenException()
+        if not jwt.is_available():
+            raise InvalidAccessTokenException()
+    except Exception as e:
+        logging.exception(e)
+        raise InvalidAccessTokenException()
 

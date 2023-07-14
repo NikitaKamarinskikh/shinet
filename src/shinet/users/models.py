@@ -1,13 +1,7 @@
-from datetime import datetime, timedelta, timezone
-import uuid
 from django.db import models
+
 from services.models import Specializations
-from subscriptions.models import ActiveSubscriptions
-from subscriptions.services import get_trial_subscription
 from .settings import UsersRoles, UsersStatuses
-
-
-DEFAULT_VERIFICATION_CODE_LIFETIME_IN_MINUTES = 5
 
 
 class Users(models.Model):
@@ -26,26 +20,10 @@ class Users(models.Model):
     def __str__(self) -> str:
         return f'{self.first_name} {self.last_name}'
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        settings = UserSettings.objects.create()
-        self.settings = settings
-        if self.role == UsersRoles.MASTER.value:
-            trial_subscription = get_trial_subscription()
-            active_subscription = ActiveSubscriptions.objects.create(
-                subscription=trial_subscription,
-                start=datetime.now(timezone.utc),
-                end=datetime.now(timezone.utc),
-            )
-            master_info = MasterInfo.objects.create(
-                active_subscription=active_subscription
-            )
-            self.master_info = master_info
-        super().save()
-
     def delete(self, *args, **kwargs):
         self.settings.delete()
-        self.master_info.delete()
+        if self.master_info is not None:
+            self.master_info.delete()
         super().delete(*args, **kwargs)
 
     class Meta:
@@ -54,24 +32,43 @@ class Users(models.Model):
 
 
 class MasterInfo(models.Model):
-    location = models.CharField(verbose_name='Местоположение', max_length=100, null=True,
-                                blank=True, default='Unknown')
+    location = models.OneToOneField('Locations', verbose_name='Адрес', on_delete=models.CASCADE, null=True)
     rating = models.PositiveIntegerField(verbose_name='Рейтинг', default=0)
     specializations = models.ManyToManyField(Specializations, blank=True, verbose_name='Специализации')
-    active_subscription = models.OneToOneField(ActiveSubscriptions, on_delete=models.CASCADE,
-                                               verbose_name='Активная подписка')
     uuid = models.PositiveIntegerField(verbose_name='UUID', default=0, unique=True)
+    description = models.TextField(verbose_name='Описание', null=True, blank=True)
 
     def __str__(self) -> str:
         return self.uuid.__str__()
+
+    def delete(self, *args, **kwargs):
+        self.location.delete()
+        super().delete(*args, **kwargs)
 
     class Meta:
         verbose_name = 'Информация мастера'
         verbose_name_plural = 'Информации мастеров'
 
 
+class Locations(models.Model):
+    city = models.CharField(verbose_name='Город', max_length=255)
+    district = models.CharField(verbose_name='Район', max_length=255, null=True, blank=True)
+    street = models.CharField(verbose_name='Улица', max_length=255)
+    house = models.CharField(verbose_name='Дом', max_length=255)
+    office = models.CharField(verbose_name='Офис', max_length=255, null=True, blank=True)
+    floor = models.CharField(verbose_name='Этаж', max_length=255, null=True, blank=True)
+    extra_info = models.TextField(verbose_name='Дополнительная информация', null=True, blank=True)
+
+    def __str__(self):
+        return f'{self.city} {self.district} {self.street}'
+
+    class Meta:
+        verbose_name = 'Локация'
+        verbose_name_plural = 'Локации'
+
+
 class UserSettings(models.Model):
-    color_theme = models.CharField(verbose_name='Цветовая тема', max_length=255, default='LIGHT')
+    notification_status = models.BooleanField(verbose_name='отправлять уведомления', default=True)
 
     class Meta:
         verbose_name = 'Настройки пользователя'
@@ -88,9 +85,13 @@ class UsersPhonesNumbers(models.Model):
 
 
 class UnregisteredClients(models.Model):
+    """
+    This model contains clients that was created by masters
+    """
     master = models.ForeignKey(MasterInfo, verbose_name='Мастер', on_delete=models.CASCADE)
     first_name = models.CharField(verbose_name='Имя', max_length=255)
     last_name = models.CharField(verbose_name='Фамилия', max_length=255)
+    extra_info = models.TextField(verbose_name='Дополнительная информация', null=True, blank=True)
 
     def __str__(self) -> str:
         return f'{self.first_name} {self.last_name}'
@@ -100,28 +101,13 @@ class UnregisteredClients(models.Model):
         verbose_name_plural = 'Незарегистрированные клиенты'
 
 
-def get_code_expiration_time() -> datetime:
-    """Calculate code lifetime (starts from current time in utc)
-        and return timestamp
-    :return: code expiration time
-    :rtype: datetime.datetime
-    """
-    current_utc_time = datetime.now(timezone.utc)
-    code_expiration_time = current_utc_time + timedelta(minutes=DEFAULT_VERIFICATION_CODE_LIFETIME_IN_MINUTES)
-    return code_expiration_time
+class NotificationTokens(models.Model):
+    user = models.ForeignKey(Users, verbose_name='Пользователь', on_delete=models.CASCADE)
+    token = models.CharField(verbose_name='Токен', max_length=255)
 
-
-class VerificationCodes(models.Model):
-    email = models.EmailField(verbose_name='Email', unique=True)
-    code = models.PositiveIntegerField(verbose_name='Код', unique=True)
-    expiration_time = models.DateTimeField(verbose_name='Время истечения',
-                                           default=get_code_expiration_time(), editable=False)
-
-    def __str__(self) -> str:
-        return f'{self.email} {self.code}'
+    def __str__(self):
+        return f'{self.user} {self.token[:10]}...'
 
     class Meta:
-        verbose_name = 'Код для проверки'
-        verbose_name_plural = 'Коды для проверки'
-
-
+        verbose_name = 'Токен для пуш уведомлений'
+        verbose_name_plural = 'Токены для пуш уведомлений'

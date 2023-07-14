@@ -43,16 +43,22 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'rest_framework',
+    'channels',
     'drf_yasg',
+    'rest_framework',
     'corsheaders',
 
     'users.apps.UsersConfig',
     'services.apps.ServicesConfig',
     'tokens.apps.TokensConfig',
     'subscriptions.apps.SubscriptionsConfig',
-    'terms_of_use.apps.TermsOfUseConfig',
+    'slots.apps.SlotsConfig',
+    'verification.apps.VerificationConfig',
 ]
+
+REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'users.exceptions.custom_exception_handler'
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -84,7 +90,13 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'shinet.wsgi.application'
+ASGI_APPLICATION = 'shinet.asgi.application'
 
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer'
+    }
+}
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
@@ -142,7 +154,7 @@ TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
-USE_TZ = True
+USE_TZ = False
 
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

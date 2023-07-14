@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from users.models import Users
+from users.locations.serializers import LocationSerializer
 from .services import make_sha256_hash
 
 
@@ -23,7 +24,7 @@ class MasterRegistrationSerializer(ClientRegistrationSerializer):
     phone_numbers_lit = serializers.ListField(
         child=serializers.CharField(), required=False
     )
-    location = serializers.CharField(max_length=255)
+    location = LocationSerializer()
 
     def create(self, validated_data):
         validated_data['password'] = make_sha256_hash(validated_data['password'])
