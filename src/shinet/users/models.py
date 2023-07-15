@@ -57,6 +57,8 @@ class Locations(models.Model):
     house = models.CharField(verbose_name='Дом', max_length=255)
     office = models.CharField(verbose_name='Офис', max_length=255, null=True, blank=True)
     floor = models.CharField(verbose_name='Этаж', max_length=255, null=True, blank=True)
+    lat = models.FloatField(verbose_name='Широта', null=True, blank=True)
+    lon = models.FloatField(verbose_name='Долгота', null=True, blank=True)
     extra_info = models.TextField(verbose_name='Дополнительная информация', null=True, blank=True)
 
     def __str__(self):

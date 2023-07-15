@@ -2,7 +2,7 @@
 This module contains some additional functions for locations
 """
 import json
-from typing import NamedTuple, List
+from typing import NamedTuple, List, Optional
 from dataclasses import dataclass
 
 
@@ -12,6 +12,8 @@ class Location:
     type: str
     region: str
     districts: List[str]
+    lat: Optional[float]
+    lon: Optional[float]
 
     @property
     def json(self):
@@ -19,7 +21,9 @@ class Location:
             'name': self.name,
             'type': self.type,
             'region': self.region,
-            'districts': self.districts
+            'districts': self.districts,
+            'lat': self.lat,
+            'lon': self.lon
         }
 
 
@@ -33,7 +37,9 @@ def load_locations() -> List[Location]:
                     name=location.get('name'),
                     type=location.get('type'),
                     region=location.get('region'),
-                    districts=location.get('districts')
+                    districts=location.get('districts'),
+                    lat=location.get('lat'),
+                    lon=location.get('lon')
                 )
             )
     return locations

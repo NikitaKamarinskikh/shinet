@@ -115,16 +115,40 @@ def _parse_districts(city_name: str) -> List[str]:
 
 
 if __name__ == '__main__':
-    regions_ = get_regions_list()
-    locations = get_locations_list(regions_)
+    # regions_ = get_regions_list()
+    # locations = get_locations_list(regions_)
+    # with open('locations.json', 'w') as file:
+    #     json.dump(locations, file, ensure_ascii=False)
+
+    with open('locations.json') as f:
+        data = json.load(f)
+
+    q = len(data)
+    i = 0
+    for item in data:
+        city_name = item.get('name')
+        type_ = item.get('type')
+        print(f'Processing {type_} {city_name} {i}/{q}')
+        if type_ == 'city':
+            url = f'https://ru.wikipedia.org/wiki/{city_name}'
+            response = requests.get(url)
+            soup = BeautifulSoup(response.content, 'html.parser')
+            coordinates_block = soup.find('a', class_='mw-kartographer-maplink')
+            lat, lon = None, None
+            if coordinates_block is not None:
+                lat = coordinates_block.attrs.get('data-lat')
+                lon = coordinates_block.attrs.get('data-lon')
+                lat, lon = float(lat), float(lon)
+            item['lat'] = lat
+            item['lon'] = lon
+        else:
+            item['lat'] = None
+            item['lon'] = None
+        i += 1
+
     with open('locations.json', 'w') as file:
-        json.dump(locations, file, ensure_ascii=False)
-    # # with open('cities.json') as f:
-    # #     data = json.load(f)
-    # # c = []
-    # # for item in data:
-    # #     c.append(item.get('name'))
-    # # print(len(c))
-    #
-    #
+        json.dump(data, file, ensure_ascii=False)
+
+
+
 
