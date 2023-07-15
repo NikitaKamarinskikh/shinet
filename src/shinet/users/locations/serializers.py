@@ -23,3 +23,7 @@ class LocationsListSerializer(serializers.Serializer):
         allow_empty=True,
         min_length=0
     )
+    lat = serializers.FloatField(allow_null=True)
+    lon = serializers.FloatField(allow_null=True)
+
+
