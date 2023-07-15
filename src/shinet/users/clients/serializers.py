@@ -27,13 +27,4 @@ class EditClientSerializer(serializers.Serializer):
     phone_number = serializers.CharField(required=False)
 
 
-class EditClientEmailSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-
-
-class EditClientPasswordSerializer(serializers.Serializer):
-    current_password = serializers.CharField()
-    new_password = serializers.CharField()
-
-
 
