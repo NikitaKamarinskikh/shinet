@@ -19,7 +19,7 @@ class LocationsAPIView(GenericAPIView):
     def get(self, request):
         serializer = LocationsQuerySerializer(data=request.query_params)
         serializer.is_valid(raise_exception=True)
-        start_position = serializer.validated_data.get('start_position')
+        page = serializer.validated_data.get('page')
         quantity = serializer.validated_data.get('quantity')
         pattern = serializer.validated_data.get('pattern')
 
@@ -32,6 +32,7 @@ class LocationsAPIView(GenericAPIView):
         else:
             filtered_locations = locations.copy()
 
+        start_position = page * quantity
         filtered_locations = filtered_locations[start_position:start_position + quantity]
 
         filtered_locations = [item.json for item in filtered_locations]
