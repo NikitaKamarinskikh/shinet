@@ -129,7 +129,7 @@ if __name__ == '__main__':
         city_name = item.get('name')
         type_ = item.get('type')
         print(f'Processing {type_} {city_name} {i}/{q}')
-        if type_ == 'city':
+        if type_ != 'city':
             url = f'https://ru.wikipedia.org/wiki/{city_name}'
             response = requests.get(url)
             soup = BeautifulSoup(response.content, 'html.parser')
@@ -145,6 +145,9 @@ if __name__ == '__main__':
             item['lat'] = None
             item['lon'] = None
         i += 1
+        if i % 100 == 0:
+            with open('locations.json', 'w') as file:
+                json.dump(data, file, ensure_ascii=False)
 
     with open('locations.json', 'w') as file:
         json.dump(data, file, ensure_ascii=False)
