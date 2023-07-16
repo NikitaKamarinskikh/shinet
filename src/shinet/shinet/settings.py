@@ -43,9 +43,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'channels',
-    'drf_yasg',
     'rest_framework',
+    'drf_yasg',
     'corsheaders',
 
     'users.apps.UsersConfig',
@@ -53,7 +52,6 @@ INSTALLED_APPS = [
     'tokens.apps.TokensConfig',
     'subscriptions.apps.SubscriptionsConfig',
     'slots.apps.SlotsConfig',
-    'verification.apps.VerificationConfig',
 ]
 
 REST_FRAMEWORK = {
@@ -90,13 +88,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'shinet.wsgi.application'
-ASGI_APPLICATION = 'shinet.asgi.application'
 
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer'
-    }
-}
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
@@ -107,17 +99,17 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
-# DATABASES = {
+#
+#DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.postgresql_psycopg2',
 #         'NAME': env.str("POSTGRES_DB"),
 #         'USER': env.str("POSTGRES_USER"),
-#         'PASSWORD': env.str("POSTGRES_PASSWORD"),
-#         "HOST": env.str("DB_HOST"),
+#        'PASSWORD': env.str("POSTGRES_PASSWORD"),
+#       "HOST": env.str("DB_HOST"),
 #         'PORT': env.str("DB_PORT"),
 #     }
-# }
+#}
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
@@ -179,6 +171,4 @@ MEDIA_ROOT = Path.joinpath(BASE_DIR, 'media')
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-
 
