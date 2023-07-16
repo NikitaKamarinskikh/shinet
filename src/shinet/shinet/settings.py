@@ -52,7 +52,6 @@ INSTALLED_APPS = [
     'tokens.apps.TokensConfig',
     'subscriptions.apps.SubscriptionsConfig',
     'slots.apps.SlotsConfig',
-    'bookings.apps.BookingsConfig',
     'verification.apps.VerificationConfig',
 ]
 
