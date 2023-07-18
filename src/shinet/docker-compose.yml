@@ -1,7 +1,6 @@
 version: "3.1"
 
 services:
-
   db:
     container_name: database
     image: postgres
@@ -43,9 +42,9 @@ services:
       - db
     ports:
       - "443:443"
-      - "80:80"
     volumes:
       - ./static/:/static
+      - /var/www/html/shinet-web:/usr/share/nginx/html
     restart: always
 
 networks:
@@ -54,6 +53,3 @@ networks:
 
 volumes:
   pgdata:
-
-
-

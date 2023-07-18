@@ -3,6 +3,27 @@ from typing import List, Optional
 from . import models
 
 
+def get_user_by_id_or_none(client_id: int) -> Optional[models.Users]:
+    """
+
+    """
+    return models.Users.objects.filter(pk=client_id).first()
+
+
+def update_user(client_id: int, data: dict) -> int:
+    """
+
+    """
+    return models.Users.objects.filter(pk=client_id).update(**data)
+
+
+def get_user_by_filters_or_none(client_id: int, **filters) -> Optional[models.Users]:
+    """
+
+    """
+    return models.Users.objects.filter(pk=client_id, **filters).first()
+
+
 def get_user_phone_numbers(user_id: int) -> List[str]:
     """
 
