@@ -6,6 +6,7 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.generics import ListAPIView, GenericAPIView
 from rest_framework.response import Response
+
 from shinet.services import HTTP_422_RESPONSE_SWAGGER_SCHEME
 from tokens.decorators import check_access_token
 from .models import Specializations
@@ -22,7 +23,7 @@ class SpecializationsAPIView(ListAPIView):
 
 
 class MastersServicesListAPIView(GenericAPIView):
-    serializer_class = serializers.MasterServiceSerializer
+    serializer_class = serializers.MasterServicesListQuerySerializer
 
     @swagger_auto_schema(
         request_headers={
@@ -38,15 +39,21 @@ class MastersServicesListAPIView(GenericAPIView):
             status.HTTP_200_OK: serializers.MasterServiceSerializer(many=True),
             status.HTTP_403_FORBIDDEN: 'Access denied'
         },
+        query_serializer=serializers.MasterServicesListQuerySerializer()
     )
     @check_access_token
-    def get(self, request: HttpRequest):
+    def get(self, request):
         try:
             payload = get_payload_from_token(request)
             master_id = payload.get('master_id')
             if master_id is None:
                 return Response(status=status.HTTP_403_FORBIDDEN)
+            serializer = serializers.MasterServicesListQuerySerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            limit = serializer.validated_data.get('limit')
             services = get_master_services(master_id)
+            if limit is not None:
+                services = services[:limit + 1]
             serializer = serializers.MasterServiceSerializer(services, many=True)
             return Response(status=status.HTTP_200_OK, data=serializer.data)
         except InvalidAccessTokenException:
