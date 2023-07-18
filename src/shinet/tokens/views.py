@@ -6,8 +6,7 @@ from rest_framework.response import Response
 
 from .jwt import JWT
 from .serializers import UpdateAccessTokenSerializer
-from .exceptions import InvalidAccessTokenException
-from shinet.services import HTTP_422_RESPONSE_SWAGGER_SCHEME, make_422_response
+from users.services import get_user_by_id_or_none
 
 
 class UpdateAccessTokenAPIView(GenericAPIView):
@@ -36,8 +35,15 @@ class UpdateAccessTokenAPIView(GenericAPIView):
             if refresh_jwt.is_available():
                 payload = refresh_jwt.payload
                 user_id = payload.get('user_id')
-
-                jwt = JWT(payload, update_time=True)
+                user = get_user_by_id_or_none(user_id)
+                if user is None:
+                    return Response(status=status.HTTP_403_FORBIDDEN)
+                new_payload = {
+                    'user_id': user.pk,
+                }
+                if user.master_info:
+                    new_payload['master_id'] = user.master_info.pk
+                jwt = JWT(new_payload, update_time=True)
                 return Response(status=status.HTTP_200_OK, data={
                     'access_token': jwt.access_token
                 })
@@ -45,7 +51,4 @@ class UpdateAccessTokenAPIView(GenericAPIView):
                 return Response(status=status.HTTP_403_FORBIDDEN)
         except Exception as e:
             return Response(status=status.HTTP_403_FORBIDDEN)
-
-
-
 
