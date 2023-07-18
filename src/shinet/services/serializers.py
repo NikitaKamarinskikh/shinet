@@ -37,3 +37,6 @@ class EditMasterServiceSerializer(serializers.Serializer):
     description = serializers.CharField(required=False)
 
 
+class MasterServicesListQuerySerializer(serializers.Serializer):
+    limit = serializers.IntegerField(required=False)
+
