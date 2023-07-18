@@ -3,7 +3,7 @@ from .views import UpdateAccessTokenAPIView
 
 
 urlpatterns = [
-    path('update/', UpdateAccessTokenAPIView.as_view()),
+    path('/update', UpdateAccessTokenAPIView.as_view()),
 ]
 
 

@@ -9,10 +9,11 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
-from datetime import datetime, timedelta, timezone
+
 from subscriptions.services import save_master_trial_subscription
 from tokens.jwt import JWT
 from tokens.services import create_refresh_token
+from verification.decorators import check_verification_token
 from .serializers import MasterRegistrationSerializer, ClientRegistrationSerializer
 from shinet.services import HTTP_422_RESPONSE_SWAGGER_SCHEME, make_422_response
 from users.settings import UsersRoles
@@ -26,6 +27,15 @@ class ClientsRegistrationAPIView(GenericAPIView):
     serializer_class = ClientRegistrationSerializer
 
     @swagger_auto_schema(
+        request_headers={
+            'Verification': 'Bearer <token>'
+        },
+        manual_parameters=[
+            openapi.Parameter(
+                'Verification', openapi.IN_HEADER, 'Verification token',
+                type=openapi.TYPE_STRING
+            ),
+        ],
         responses={
             status.HTTP_200_OK: openapi.Response(
                 description='Client created',
@@ -41,6 +51,7 @@ class ClientsRegistrationAPIView(GenericAPIView):
         },
         operation_description='You can also add `profile_image` parameter with client photo profile'
     )
+    @check_verification_token
     def post(self, request):
         data = request.data.copy()
         data['role'] = UsersRoles.CLIENT.value
@@ -69,6 +80,15 @@ class MastersRegistrationAPIView(GenericAPIView):
     serializer_class = MasterRegistrationSerializer
 
     @swagger_auto_schema(
+        request_headers={
+            'Verification': 'Bearer <token>'
+        },
+        manual_parameters=[
+            openapi.Parameter(
+                'Verification', openapi.IN_HEADER, 'Verification token',
+                type=openapi.TYPE_STRING
+            ),
+        ],
         responses={
             status.HTTP_200_OK: openapi.Response(
                 description='Client created',
@@ -84,6 +104,7 @@ class MastersRegistrationAPIView(GenericAPIView):
         },
         operation_description='You can also add `profile_image` parameter with client photo profile'
     )
+    # @check_verification_token
     def post(self, request):
         data = request.data
         data['role'] = UsersRoles.MASTER.value

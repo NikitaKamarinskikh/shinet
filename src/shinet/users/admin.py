@@ -50,3 +50,12 @@ class UnregisteredClientsAdmin(admin.ModelAdmin):
 
     class Meta:
         model = models.UnregisteredClients
+
+
+@admin.register(models.NotificationTokens)
+class NotificationsTokenAdmin(admin.ModelAdmin):
+    list_display = ('user', 'token')
+
+    class Meta:
+        model = models.NotificationTokens
+

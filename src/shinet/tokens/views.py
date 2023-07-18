@@ -3,10 +3,10 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
+
 from .jwt import JWT
 from .serializers import UpdateAccessTokenSerializer
-from .exceptions import InvalidAccessTokenException
-from shinet.services import HTTP_422_RESPONSE_SWAGGER_SCHEME, make_422_response
+from users.services import get_user_by_id_or_none
 
 
 class UpdateAccessTokenAPIView(GenericAPIView):
@@ -24,28 +24,31 @@ class UpdateAccessTokenAPIView(GenericAPIView):
                 ),
             ),
             status.HTTP_403_FORBIDDEN: 'Forbidden',
-            status.HTTP_422_UNPROCESSABLE_ENTITY: HTTP_422_RESPONSE_SWAGGER_SCHEME
         }
     )
     def patch(self, request):
-        data = request.data
-        serializer = UpdateAccessTokenSerializer(data=data)
+        serializer = UpdateAccessTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        access_token = data.get('access_token')
-        refresh_token = data.get('refresh_token')
+        refresh_token = serializer.validated_data.get('refresh_token')
         try:
-            access_jwt = JWT(access_token)
             refresh_jwt = JWT(refresh_token)
             if refresh_jwt.is_available():
-                jwt = JWT(access_jwt.payload, update_time=True)
+                payload = refresh_jwt.payload
+                user_id = payload.get('user_id')
+                user = get_user_by_id_or_none(user_id)
+                if user is None:
+                    return Response(status=status.HTTP_403_FORBIDDEN)
+                new_payload = {
+                    'user_id': user.pk,
+                }
+                if user.master_info:
+                    new_payload['master_id'] = user.master_info.pk
+                jwt = JWT(new_payload, update_time=True)
                 return Response(status=status.HTTP_200_OK, data={
                     'access_token': jwt.access_token
                 })
             else:
                 return Response(status=status.HTTP_403_FORBIDDEN)
-        except InvalidAccessTokenException:
+        except Exception as e:
             return Response(status=status.HTTP_403_FORBIDDEN)
-
-
-
 

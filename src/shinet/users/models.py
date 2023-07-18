@@ -22,7 +22,8 @@ class Users(models.Model):
 
     def delete(self, *args, **kwargs):
         self.settings.delete()
-        self.master_info.delete()
+        if self.master_info is not None:
+            self.master_info.delete()
         super().delete(*args, **kwargs)
 
     class Meta:
@@ -35,6 +36,7 @@ class MasterInfo(models.Model):
     rating = models.PositiveIntegerField(verbose_name='Рейтинг', default=0)
     specializations = models.ManyToManyField(Specializations, blank=True, verbose_name='Специализации')
     uuid = models.PositiveIntegerField(verbose_name='UUID', default=0, unique=True)
+    description = models.TextField(verbose_name='Описание', null=True, blank=True)
 
     def __str__(self) -> str:
         return self.uuid.__str__()
@@ -55,6 +57,8 @@ class Locations(models.Model):
     house = models.CharField(verbose_name='Дом', max_length=255)
     office = models.CharField(verbose_name='Офис', max_length=255, null=True, blank=True)
     floor = models.CharField(verbose_name='Этаж', max_length=255, null=True, blank=True)
+    lat = models.FloatField(verbose_name='Широта', null=True, blank=True)
+    lon = models.FloatField(verbose_name='Долгота', null=True, blank=True)
     extra_info = models.TextField(verbose_name='Дополнительная информация', null=True, blank=True)
 
     def __str__(self):
@@ -66,7 +70,7 @@ class Locations(models.Model):
 
 
 class UserSettings(models.Model):
-    color_theme = models.CharField(verbose_name='Цветовая тема', max_length=255, default='LIGHT')
+    notification_status = models.BooleanField(verbose_name='отправлять уведомления', default=True)
 
     class Meta:
         verbose_name = 'Настройки пользователя'
@@ -86,7 +90,7 @@ class UnregisteredClients(models.Model):
     """
     This model contains clients that was created by masters
     """
-    master = models.ForeignKey(MasterInfo, verbose_name='Мастер', on_delete=models.PROTECT)
+    master = models.ForeignKey(MasterInfo, verbose_name='Мастер', on_delete=models.CASCADE)
     first_name = models.CharField(verbose_name='Имя', max_length=255)
     last_name = models.CharField(verbose_name='Фамилия', max_length=255)
     extra_info = models.TextField(verbose_name='Дополнительная информация', null=True, blank=True)
@@ -99,3 +103,13 @@ class UnregisteredClients(models.Model):
         verbose_name_plural = 'Незарегистрированные клиенты'
 
 
+class NotificationTokens(models.Model):
+    user = models.ForeignKey(Users, verbose_name='Пользователь', on_delete=models.CASCADE)
+    token = models.CharField(verbose_name='Токен', max_length=255)
+
+    def __str__(self):
+        return f'{self.user} {self.token[:10]}...'
+
+    class Meta:
+        verbose_name = 'Токен для пуш уведомлений'
+        verbose_name_plural = 'Токены для пуш уведомлений'

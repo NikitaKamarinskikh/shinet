@@ -3,6 +3,8 @@ This module contains functions for parsing Russian cities
 """
 from __future__ import annotations
 import logging
+import re
+
 import requests
 import json
 from bs4 import BeautifulSoup
@@ -38,15 +40,17 @@ def get_locations_list(regions: List[Dict[str, str]]) -> List[Dict[str, str]]:
                     name = row.find('a').text
                     location_type = row.find(class_='wn').text
                     districts = []
-                    if location_type == 'г.':
-                        districts = _parse_districts(name)
+                    # if location_type == 'г.':
+                    #     districts = _parse_districts(name)
                     items.append(
                         {
                             'region': region.get('name'),
                             'type': location_type,
                             'name': name,
                             'districts': districts,
-                            'url': row.find('a')['href']
+                            'url': row.find('a')['href'],
+                            'lat': None,
+                            'lon': None
                         }
                     )
         cities.extend(items)
@@ -67,8 +71,6 @@ def _parse_regions(url: str, region: str = None) -> List[Dict[str, str]]:
                 'name': region_name,
                 'url': f'{REGIONS_URL}{url}',
             }
-            if region is not None:
-                item['region'] = region
             items.append(item)
     return items
 
@@ -115,16 +117,52 @@ def _parse_districts(city_name: str) -> List[str]:
 
 
 if __name__ == '__main__':
-    regions_ = get_regions_list()
-    locations = get_locations_list(regions_)
+    ...
+    # regions_ = get_regions_list()
+    # locations = get_locations_list(regions_)
+    #
+    # with open('locations_with_urls.json', 'w') as file:
+    #     json.dump(locations, file, ensure_ascii=False)
+    #
+    # #
+
+    with open('locations.json') as f:
+        locations = json.load(f)
+
+    for location in locations:
+        location_url = location.get('url')
+        url = f'{REGIONS_URL}{location_url}'
+        print(url)
+        response = requests.get(url)
+        soup = BeautifulSoup(response.content, 'html.parser')
+        table = soup.find('table', class_='table table-striped')
+        tds = table.find_all('td')
+        coordinates = tds[-1]
+
+        pattern = r'\d+\.\d+'
+        matches = re.findall(pattern, coordinates.text)
+
+        lat = float(matches[0])
+        lon = float(matches[1])
+        location['lat'] = lat
+        location['lon'] = lon
+
+    # with open('locations_with_urls.json') as f:
+    #     locations_with_urls = json.load(f)
+    #
+    # locations = sorted(locations, key=lambda x: x.get('name'))
+    # locations_with_urls = sorted(locations_with_urls, key=lambda x: x.get('name'))
+    #
+    # # print(len(locations), len(locations_with_urls))
+    #
+    # for i in range(len(locations)):
+    #     locations[i]['url'] = locations_with_urls[i].get('url')
+    #
+    # # for location in locations:
+    # #     print(location)
+    #
     with open('locations.json', 'w') as file:
         json.dump(locations, file, ensure_ascii=False)
-    # # with open('cities.json') as f:
-    # #     data = json.load(f)
-    # # c = []
-    # # for item in data:
-    # #     c.append(item.get('name'))
-    # # print(len(c))
-    #
-    #
+
+
 
