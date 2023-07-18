@@ -124,7 +124,8 @@ class JWT:
         exp_time = get_token_expiration_time_in_utc(REFRESH_TOKEN_DEFAULT_LIFETIME_IN_MINUTES)
         payload = {
             'is_valid': True,
-            'exp': exp_time
+            'exp': exp_time,
+            'user_id': self._payload.get('user_id')
         }
         str_payload = self._dict_to_str(payload)
         random_string = self._base64_url_encode(random_string)
