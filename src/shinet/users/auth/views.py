@@ -3,6 +3,7 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.generics import GenericAPIView
+from django.utils.translation import gettext as _
 
 from shinet.services import HTTP_422_RESPONSE_SWAGGER_SCHEME, make_422_response
 from tokens.jwt import JWT
@@ -54,6 +55,6 @@ class UserAuthenticationAPIView(GenericAPIView):
             }
             return Response(status=status.HTTP_200_OK, data=response_data)
         except Users.DoesNotExist:
-            return make_422_response({'password': 'Invalid password'})
+            return make_422_response({'password': _('Invalid password')})
 
 

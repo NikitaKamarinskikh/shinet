@@ -6,6 +6,7 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.generics import ListAPIView, GenericAPIView
 from rest_framework.response import Response
+from django.utils.translation import gettext_lazy as _
 
 from shinet.services import HTTP_422_RESPONSE_SWAGGER_SCHEME
 from tokens.decorators import check_access_token
@@ -16,11 +17,18 @@ from users.masters.services import get_master_by_id_or_none
 from . import serializers
 from .services import get_master_services_by_master_id, save_master_service,\
     get_service_by_id_and_master_id_or_none, update_master_service
+from django.utils.translation import activate
 
 
-class SpecializationsAPIView(ListAPIView):
+class SpecializationsAPIView(GenericAPIView):
     serializer_class = serializers.SpecializationsSerializer
-    queryset = Specializations.objects.all()
+
+    def get(self, request):
+        queryset = Specializations.objects.all()
+        for item in queryset:
+            item.name = _(item.name)
+        response_serializer = serializers.SpecializationsSerializer(queryset, many=True)
+        return Response(status=status.HTTP_200_OK, data=response_serializer.data)
 
 
 class MastersServicesListAPIView(GenericAPIView):
