@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'tokens.apps.TokensConfig',
     'subscriptions.apps.SubscriptionsConfig',
     'slots.apps.SlotsConfig',
+    'websockets.apps.WebsocketsConfig',
 ]
 
 REST_FRAMEWORK = {

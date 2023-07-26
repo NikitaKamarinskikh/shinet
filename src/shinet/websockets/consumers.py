@@ -12,7 +12,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from asgiref.sync import sync_to_async, async_to_sync
 from django.db.models import Prefetch
 
-from tokens.services import validate_access_token
+from tokens.services import validate_access_token, get_payload_from_access_token
 from tokens.exceptions import InvalidAccessTokenException
 from slots.models import Slots
 from slots import serializers
@@ -23,28 +23,44 @@ SCHEDULE_KEY = 'schedule'
 UNREAD_MESSAGES_QUANTITY_KEY = 'unread_messages'
 
 
-class SlotConsumer(AsyncWebsocketConsumer):
+class Consumer(AsyncWebsocketConsumer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._keys = []
+        self.room_name: str = None  # User id
+        self.room_group_name: str = None
 
     async def connect(self):
-        self.room_name = self.scope['url_route']['kwargs']['user_id']
-        self.room_group_name = f'slots_{self.room_name}'
+        access_token = self.scope['url_route']['kwargs']['access_token']
+        try:
+            validate_access_token(access_token, check_bearer=False)
+            payload = get_payload_from_access_token(access_token)
+            user_id = payload.get('user_id')
+            if user_id is None or not isinstance(user_id, int):
+                await self.disconnect(500)
+                return
 
-        await self.channel_layer.group_add(
-            self.room_group_name,
-            self.channel_name
-        )
+            self.room_name = str(user_id)
+            self.room_group_name = f'room_{self.room_name}'
 
-        await self.accept()
+            await self.channel_layer.group_add(
+                self.room_group_name,
+                self.channel_name
+            )
+
+            await self.accept()
+        except Exception as e:
+            logging.exception(e)
+            await self.disconnect(500)
 
     async def disconnect(self, code):
-        await self.channel_layer.group_discard(
-            self.room_group_name,
-            self.channel_name
-        )
+        if self.room_group_name is not None\
+                and self.channel_name is not None:
+            await self.channel_layer.group_discard(
+                self.room_group_name,
+                self.channel_name
+            )
 
     async def receive(self, text_data):
         try:
@@ -121,4 +137,8 @@ class SlotConsumer(AsyncWebsocketConsumer):
 
     async def _count_unread_messages(self) -> int:
         return 999
+
+    async def _get_subscription_info(self) -> bool:
+        user_id = self.room_name
+        return True
 

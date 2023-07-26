@@ -98,11 +98,22 @@ def get_payload_from_token(request: HttpRequest) -> dict:
     return jwt.payload
 
 
-def validate_access_token(access_token: str) -> None:
+def get_payload_from_access_token(access_token: str) -> dict:
+    """
+
+    """
+    jwt = JWT(access_token)
+    return jwt.payload
+
+
+def validate_access_token(access_token: str, check_bearer: bool = True) -> None:
     try:
-        bearer, token = access_token.split()  # 'Bearer' {token}
-        if bearer != 'Bearer':
-            raise InvalidAccessTokenException()
+        if check_bearer:
+            bearer, token = access_token.split()  # 'Bearer' {token}
+            if bearer != 'Bearer':
+                raise InvalidAccessTokenException()
+        else:
+            token = access_token
         jwt = JWT(token)
         check_jwt = JWT(jwt.payload)
         if not check_jwt.is_equal_signature(jwt):
